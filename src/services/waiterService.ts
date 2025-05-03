@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Waiter, Restaurant, Review } from '@/types';
+import { Waiter, Restaurant, Review, LeaderboardEntry, MonthlyChampion } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Get base URL for tracking links
@@ -14,23 +14,85 @@ const generateQRCodeURL = (trackingLink: string) => {
   return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(trackingLink)}`;
 };
 
+// Map database restaurant to client model
+const mapRestaurantFromDb = (dbRestaurant: any): Restaurant => {
+  return {
+    id: dbRestaurant.id,
+    name: dbRestaurant.name,
+    googleReviewUrl: dbRestaurant.google_review_url,
+    responsible_name: dbRestaurant.responsible_name,
+    responsible_email: dbRestaurant.responsible_email,
+    responsible_phone: dbRestaurant.responsible_phone,
+    totalReviews: dbRestaurant.total_reviews,
+    initialRating: dbRestaurant.initial_rating,
+    currentRating: dbRestaurant.current_rating,
+    positiveFeedback: dbRestaurant.positive_feedback,
+    negativeFeedback: dbRestaurant.negative_feedback,
+    plan_status: dbRestaurant.plan_status,
+    plan_expiry_date: dbRestaurant.plan_expiry_date,
+    created_at: dbRestaurant.created_at,
+    updated_at: dbRestaurant.updated_at,
+    recentReviews: dbRestaurant.reviews ? dbRestaurant.reviews.map(mapReviewFromDb) : [],
+    waiter_count: dbRestaurant.waiter_count || 0
+  };
+};
+
+// Map database waiter to client model
+const mapWaiterFromDb = (dbWaiter: any): Waiter => {
+  return {
+    id: dbWaiter.id,
+    restaurant_id: dbWaiter.restaurant_id,
+    name: dbWaiter.name,
+    email: dbWaiter.email,
+    whatsapp: dbWaiter.whatsapp,
+    tracking_token: dbWaiter.tracking_token,
+    token_expiry_date: dbWaiter.token_expiry_date,
+    clicks: dbWaiter.clicks,
+    conversions: dbWaiter.conversions,
+    is_active: dbWaiter.is_active,
+    created_at: dbWaiter.created_at,
+    updated_at: dbWaiter.updated_at,
+    trackingLink: `${getBaseUrl()}${dbWaiter.tracking_token}`,
+    qrCodeUrl: generateQRCodeURL(`${getBaseUrl()}${dbWaiter.tracking_token}`),
+    isTopPerformer: false
+  };
+};
+
+// Map database review to client model
+const mapReviewFromDb = (dbReview: any): Review => {
+  return {
+    id: dbReview.id,
+    restaurant_id: dbReview.restaurant_id,
+    waiter_id: dbReview.waiter_id,
+    content: dbReview.content,
+    rating: dbReview.rating,
+    date: dbReview.created_at,
+    author: dbReview.author,
+    translated: dbReview.translated,
+    translatedContent: dbReview.translated_content,
+    created_at: dbReview.created_at
+  };
+};
+
 // Create a new waiter with a unique tracking link
 export const createWaiter = async (name: string, email: string, whatsapp: string): Promise<Waiter> => {
   // Generate a unique token for the waiter
   const trackingToken = Math.random().toString(36).substring(2, 15) + 
                         Math.random().toString(36).substring(2, 15);
   
-  let restaurant: Restaurant;
+  let restaurant: Restaurant | null = null;
   
   // Get the restaurant ID - use the first one we find for now
   // In a real app, we'd have the current restaurant ID from context
-  const { data: restaurants } = await supabase
+  const { data: restaurantData } = await supabase
     .from('restaurants')
     .select('*')
     .limit(1)
     .single();
   
-  restaurant = restaurants;
+  if (restaurantData) {
+    restaurant = mapRestaurantFromDb(restaurantData);
+  }
   
   // If no restaurant exists yet, create a default one
   if (!restaurant) {
@@ -44,7 +106,13 @@ export const createWaiter = async (name: string, email: string, whatsapp: string
       .select()
       .single();
     
-    restaurant = data;
+    if (data) {
+      restaurant = mapRestaurantFromDb(data);
+    }
+  }
+  
+  if (!restaurant) {
+    throw new Error("Failed to create or find a restaurant");
   }
   
   // Create the waiter in the database
@@ -69,29 +137,26 @@ export const createWaiter = async (name: string, email: string, whatsapp: string
   }
   
   // Add computed fields
-  const waiter: Waiter = {
-    ...data,
-    trackingLink: `${getBaseUrl()}${data.tracking_token}`,
-    qrCodeUrl: generateQRCodeURL(`${getBaseUrl()}${data.tracking_token}`),
-    isTopPerformer: false
-  };
+  const waiter = mapWaiterFromDb(data);
   
-  updateTopPerformers();
+  await updateTopPerformers();
   return waiter;
 };
 
 // Get all waiters
 export const getAllWaiters = async (): Promise<Waiter[]> => {
-  let restaurant: Restaurant;
+  let restaurant: Restaurant | null = null;
   
   // Get the restaurant ID - use the first one we find for now
-  const { data: restaurants } = await supabase
+  const { data: restaurantData } = await supabase
     .from('restaurants')
     .select('*')
     .limit(1)
     .single();
   
-  restaurant = restaurants;
+  if (restaurantData) {
+    restaurant = mapRestaurantFromDb(restaurantData);
+  }
   
   // If no restaurant exists, return empty array
   if (!restaurant) {
@@ -110,12 +175,7 @@ export const getAllWaiters = async (): Promise<Waiter[]> => {
   }
   
   // Add computed fields
-  const waiters: Waiter[] = data.map(waiter => ({
-    ...waiter,
-    trackingLink: `${getBaseUrl()}${waiter.tracking_token}`,
-    qrCodeUrl: generateQRCodeURL(`${getBaseUrl()}${waiter.tracking_token}`),
-    isTopPerformer: false
-  }));
+  const waiters: Waiter[] = data.map(mapWaiterFromDb);
   
   // Update top performers
   const updatedWaiters = await updateTopPerformers(waiters);
@@ -140,12 +200,7 @@ export const updateWaiter = async (id: string, updates: Partial<Waiter>): Promis
   }
   
   // Add computed fields
-  const waiter: Waiter = {
-    ...data,
-    trackingLink: `${getBaseUrl()}${data.tracking_token}`,
-    qrCodeUrl: generateQRCodeURL(`${getBaseUrl()}${data.tracking_token}`),
-    isTopPerformer: false
-  };
+  const waiter = mapWaiterFromDb(data);
   
   await updateTopPerformers();
   return waiter;
@@ -268,12 +323,7 @@ export const incrementClicks = async (id: string): Promise<Waiter | null> => {
   }
   
   // Add computed fields
-  const updatedWaiter: Waiter = {
-    ...data,
-    trackingLink: `${getBaseUrl()}${data.tracking_token}`,
-    qrCodeUrl: generateQRCodeURL(`${getBaseUrl()}${data.tracking_token}`),
-    isTopPerformer: false
-  };
+  const updatedWaiter = mapWaiterFromDb(data);
   
   await updateTopPerformers();
   return updatedWaiter;
@@ -289,7 +339,7 @@ const addRandomReview = async (waiterId: string, restaurantId: string): Promise<
     "Will definitely come back here again!"
   ];
   
-  const review: Partial<Review> = {
+  const review = {
     restaurant_id: restaurantId,
     waiter_id: waiterId,
     content: reviewTexts[Math.floor(Math.random() * reviewTexts.length)],
@@ -364,7 +414,7 @@ export const setRestaurantInfo = async (
       throw error;
     }
     
-    return data;
+    return mapRestaurantFromDb(data);
   } else {
     // Create a new restaurant
     const { data, error } = await supabase
@@ -385,7 +435,7 @@ export const setRestaurantInfo = async (
       throw error;
     }
     
-    return data;
+    return mapRestaurantFromDb(data);
   }
 };
 
@@ -422,7 +472,7 @@ export const updateRestaurantFeedback = async (
     throw error;
   }
   
-  return data;
+  return mapRestaurantFromDb(data);
 };
 
 // Get restaurant information
@@ -450,37 +500,28 @@ export const getRestaurantInfo = async (): Promise<Restaurant> => {
   }
   
   // Format the response
-  return {
-    ...data,
-    googleReviewUrl: data.google_review_url,
-    totalReviews: data.total_reviews,
-    initialRating: data.initial_rating,
-    currentRating: data.current_rating,
-    positiveFeedback: data.positive_feedback,
-    negativeFeedback: data.negative_feedback,
-    recentReviews: data.reviews || []
-  };
+  return mapRestaurantFromDb(data);
 };
 
-// Get total clicks across all waiters
+// Get total clicks
 export const getTotalClicks = async (): Promise<number> => {
-  const { count, error } = await supabase
+  const { data, error } = await supabase
     .from('clicks')
-    .select('*', { count: 'exact', head: true });
+    .select('id', { count: 'exact' });
   
   if (error) {
     console.error('Error getting total clicks:', error);
     return 0;
   }
   
-  return count || 0;
+  return data.length;
 };
 
-// Get total conversions across all waiters
+// Get total conversions
 export const getTotalConversions = async (): Promise<number> => {
-  const { count, error } = await supabase
+  const { data, error } = await supabase
     .from('clicks')
-    .select('*', { count: 'exact', head: true })
+    .select('id')
     .eq('converted', true);
   
   if (error) {
@@ -488,12 +529,119 @@ export const getTotalConversions = async (): Promise<number> => {
     return 0;
   }
   
-  return count || 0;
+  return data.length;
 };
 
-// Get the current month's leaderboard
-export const getCurrentLeaderboard = async () => {
-  const { data, error } = await supabase
+// Calculate days until end of month
+export const getDaysUntilEndOfMonth = (): number => {
+  const date = new Date();
+  const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return lastDay.getDate() - date.getDate();
+};
+
+// Initialize sample data for development
+export const initializeSampleData = async (): Promise<void> => {
+  // First check if we already have data
+  const { data: existingRestaurants, error } = await supabase
+    .from('restaurants')
+    .select('id')
+    .limit(1);
+  
+  if (error) {
+    console.error('Error checking for existing data:', error);
+    return;
+  }
+  
+  // If we already have data, don't add more
+  if (existingRestaurants && existingRestaurants.length > 0) {
+    return;
+  }
+  
+  // Create a restaurant
+  const { data: restaurant, error: restError } = await supabase
+    .from('restaurants')
+    .insert({
+      name: 'Bistro Italiano',
+      google_review_url: 'https://g.page/r/example-restaurant-review',
+      total_reviews: 42,
+      initial_rating: 4.1,
+      current_rating: 4.3,
+      positive_feedback: 'Customers love our pasta dishes and friendly service.',
+      negative_feedback: 'Some customers mentioned long wait times during peak hours.',
+      plan_status: 'active'
+    })
+    .select()
+    .single();
+  
+  if (restError) {
+    console.error('Error creating sample restaurant:', restError);
+    return;
+  }
+  
+  // Create some waiters
+  const waiters = [
+    { name: 'João Silva', email: 'joao@example.com', whatsapp: '+5511999887766' },
+    { name: 'Maria Oliveira', email: 'maria@example.com', whatsapp: '+5511988776655' },
+    { name: 'Carlos Santos', email: 'carlos@example.com', whatsapp: '+5511977665544' },
+  ];
+  
+  for (const waiter of waiters) {
+    // Generate tracking token
+    const trackingToken = Math.random().toString(36).substring(2, 15) + 
+                          Math.random().toString(36).substring(2, 15);
+                          
+    // Add random clicks (0-30)
+    const clicks = Math.floor(Math.random() * 30);
+    
+    // Add random conversions (0-clicks)
+    const conversions = Math.floor(Math.random() * clicks);
+    
+    await supabase.from('waiters').insert({
+      restaurant_id: restaurant.id,
+      name: waiter.name,
+      email: waiter.email,
+      whatsapp: waiter.whatsapp,
+      tracking_token: trackingToken,
+      clicks,
+      conversions,
+      is_active: true
+    });
+  }
+  
+  // Create some reviews
+  const reviews = [
+    {
+      content: "The service was excellent! Our waiter was very attentive.",
+      rating: 5,
+      author: "Ana P."
+    },
+    {
+      content: "The food was good but it took a long time to be served.",
+      rating: 3,
+      author: "Roberto M."
+    },
+    {
+      content: "Great atmosphere and the pizza was delicious!",
+      rating: 4,
+      author: "Juliana C."
+    }
+  ];
+  
+  for (const review of reviews) {
+    await supabase.from('reviews').insert({
+      restaurant_id: restaurant.id,
+      content: review.content,
+      rating: review.rating,
+      author: review.author
+    });
+  }
+  
+  console.log('Sample data initialized successfully');
+};
+
+// Get current leaderboard
+export const getCurrentLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+  const { data: waiters, error } = await supabase
     .from('waiters')
     .select('id, name, clicks')
     .order('clicks', { ascending: false });
@@ -503,7 +651,7 @@ export const getCurrentLeaderboard = async () => {
     return [];
   }
   
-  return data.map((waiter, index) => ({
+  return waiters.map((waiter, index) => ({
     waiterId: waiter.id,
     waiterName: waiter.name,
     clicks: waiter.clicks,
@@ -511,53 +659,8 @@ export const getCurrentLeaderboard = async () => {
   }));
 };
 
-// Record a monthly champion
-export const recordMonthlyChampion = async () => {
-  const waiters = await getAllWaiters();
-  
-  if (waiters.length === 0) return null;
-  
-  const sortedWaiters = [...waiters].sort((a, b) => b.clicks - a.clicks);
-  const champion = sortedWaiters[0];
-  
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-  
-  // Get the restaurant ID
-  const { data: restaurant } = await supabase
-    .from('restaurants')
-    .select('id')
-    .limit(1)
-    .single();
-  
-  if (!restaurant) {
-    return null;
-  }
-  
-  const { data, error } = await supabase
-    .from('monthly_champions')
-    .insert({
-      restaurant_id: restaurant.id,
-      waiter_id: champion.id,
-      waiter_name: champion.name,
-      month,
-      year,
-      clicks: champion.clicks
-    })
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Error recording monthly champion:', error);
-    return null;
-  }
-  
-  return data;
-};
-
-// Get all monthly champions
-export const getMonthlyChampions = async () => {
+// Get monthly champions
+export const getMonthlyChampions = async (): Promise<MonthlyChampion[]> => {
   const { data, error } = await supabase
     .from('monthly_champions')
     .select('*')
@@ -569,30 +672,31 @@ export const getMonthlyChampions = async () => {
     return [];
   }
   
-  return data;
+  return data.map(champion => ({
+    ...champion,
+    waiterName: champion.waiter_name
+  }));
 };
 
-// Translate a review (mock function)
-export const translateReview = async (reviewId: string): Promise<Review | null> => {
-  // Get the review
-  const { data: review, error: getError } = await supabase
+// Translate a review
+export const translateReview = async (reviewId: string): Promise<Review> => {
+  // First get the current review
+  const { data: review, error } = await supabase
     .from('reviews')
     .select('*')
     .eq('id', reviewId)
     .single();
   
-  if (getError) {
-    console.error('Error getting review:', getError);
-    return null;
+  if (error) {
+    console.error('Error getting review:', error);
+    throw error;
   }
   
-  // Mock translation
-  const translatedPrefixes = ["Tradução: ", "Translated: ", "En Español: "];
-  const prefix = translatedPrefixes[Math.floor(Math.random() * translatedPrefixes.length)];
-  const translatedContent = prefix + review.content;
+  // Simulate translation (in a real app, this would call a translation API)
+  const translatedContent = `[TRANSLATED] ${review.content}`;
   
-  // Update the review
-  const { data, error } = await supabase
+  // Update the review with the translation
+  const { data: updatedReview, error: updateError } = await supabase
     .from('reviews')
     .update({
       translated: true,
@@ -602,124 +706,10 @@ export const translateReview = async (reviewId: string): Promise<Review | null> 
     .select()
     .single();
   
-  if (error) {
-    console.error('Error updating review translation:', error);
-    return null;
+  if (updateError) {
+    console.error('Error updating review translation:', updateError);
+    throw updateError;
   }
   
-  return data;
-};
-
-// Get days remaining until end of month
-export const getDaysUntilEndOfMonth = (): number => {
-  const now = new Date();
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const diffTime = lastDay.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
-};
-
-// Initialize with some sample data for development
-export const initializeSampleData = async () => {
-  try {
-    // Check if we already have data
-    const { count: restaurantCount, error: countError } = await supabase
-      .from('restaurants')
-      .select('*', { count: 'exact', head: true });
-    
-    if (countError) {
-      console.error('Error checking for existing data:', countError);
-      return;
-    }
-    
-    if (restaurantCount && restaurantCount > 0) {
-      console.log('Data already initialized, skipping sample data creation');
-      return;
-    }
-    
-    // Create a sample restaurant
-    const { data: restaurant, error: restError } = await supabase
-      .from('restaurants')
-      .insert({
-        name: 'Restaurante Exemplo',
-        google_review_url: 'https://g.page/r/example-restaurant-review',
-        total_reviews: 120,
-        initial_rating: 4.2,
-        current_rating: 4.4,
-        positive_feedback: 'Muitos clientes elogiam o atendimento e a rapidez do serviço.',
-        negative_feedback: 'Algumas reclamações sobre o tempo de espera nos fins de semana.',
-        plan_status: 'trial'
-      })
-      .select()
-      .single();
-    
-    if (restError) {
-      console.error('Error creating sample restaurant:', restError);
-      return;
-    }
-    
-    // Create sample waiters
-    const waiters = [
-      { name: 'João Silva', email: 'joao@example.com', whatsapp: '+5511999991111' },
-      { name: 'Maria Oliveira', email: 'maria@example.com', whatsapp: '+5511999992222' },
-      { name: 'Pedro Santos', email: 'pedro@example.com', whatsapp: '+5511999993333' }
-    ];
-    
-    for (const waiter of waiters) {
-      const { data: newWaiter, error: waiterError } = await supabase
-        .from('waiters')
-        .insert({
-          restaurant_id: restaurant.id,
-          name: waiter.name,
-          email: waiter.email,
-          whatsapp: waiter.whatsapp,
-          tracking_token: Math.random().toString(36).substring(2, 15),
-          clicks: Math.floor(Math.random() * 30),
-          conversions: Math.floor(Math.random() * 10),
-          is_active: true
-        })
-        .select()
-        .single();
-      
-      if (waiterError) {
-        console.error('Error creating sample waiter:', waiterError);
-        continue;
-      }
-      
-      // Add some sample reviews
-      for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
-        await addRandomReview(newWaiter.id, restaurant.id);
-      }
-    }
-    
-    // Add a sample monthly champion
-    const now = new Date();
-    const lastMonth = new Date(now.setMonth(now.getMonth() - 1));
-    const month = lastMonth.getMonth() + 1;
-    const year = lastMonth.getFullYear();
-    
-    // Get a random waiter to be the champion
-    const { data: randomWaiter } = await supabase
-      .from('waiters')
-      .select('id, name')
-      .limit(1)
-      .single();
-    
-    if (randomWaiter) {
-      await supabase
-        .from('monthly_champions')
-        .insert({
-          restaurant_id: restaurant.id,
-          waiter_id: randomWaiter.id,
-          waiter_name: randomWaiter.name,
-          month,
-          year,
-          clicks: 45
-        });
-    }
-    
-    console.log('Sample data initialized successfully');
-  } catch (error) {
-    console.error('Error initializing sample data:', error);
-  }
+  return mapReviewFromDb(updatedReview);
 };

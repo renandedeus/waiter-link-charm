@@ -3,7 +3,7 @@ import { useState, useContext } from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Home, Users, LogOut, Menu } from "lucide-react";
-import { AuthContext } from '@/App';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
   activePage: 'dashboard' | 'waiters';
@@ -12,7 +12,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
-  const auth = useContext(AuthContext);
+  const auth = useAuth();
 
   return (
     <div className={cn(
@@ -64,7 +64,7 @@ export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
             "w-full justify-start",
             collapsed && "justify-center"
           )}
-          onClick={() => auth.logout()}
+          onClick={() => auth.signOut()}
         >
           <LogOut className="h-5 w-5 mr-2" />
           {!collapsed && <span>Logout</span>}

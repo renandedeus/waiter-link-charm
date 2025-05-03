@@ -7,10 +7,32 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
-import { BadgePlus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, PlusCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Restaurant } from '@/types';
 import { Badge } from '@/components/ui/badge';
+
+// Helper to map database fields to client model
+const mapRestaurantFromDb = (dbRestaurant: any): Restaurant => {
+  return {
+    id: dbRestaurant.id,
+    name: dbRestaurant.name,
+    googleReviewUrl: dbRestaurant.google_review_url,
+    responsible_name: dbRestaurant.responsible_name,
+    responsible_email: dbRestaurant.responsible_email,
+    responsible_phone: dbRestaurant.responsible_phone,
+    totalReviews: dbRestaurant.total_reviews,
+    initialRating: dbRestaurant.initial_rating,
+    currentRating: dbRestaurant.current_rating,
+    positiveFeedback: dbRestaurant.positive_feedback,
+    negativeFeedback: dbRestaurant.negative_feedback,
+    plan_status: dbRestaurant.plan_status,
+    plan_expiry_date: dbRestaurant.plan_expiry_date,
+    created_at: dbRestaurant.created_at,
+    updated_at: dbRestaurant.updated_at,
+    waiter_count: dbRestaurant.waiter_count
+  };
+};
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -44,10 +66,9 @@ const Restaurants = () => {
       if (error) throw error;
 
       // Transform the data format
-      const formattedData = data.map(restaurant => ({
+      const formattedData = data.map(restaurant => mapRestaurantFromDb({
         ...restaurant,
-        waiter_count: restaurant.waiters?.[0]?.count || 0,
-        waiters: undefined // Remove the original waiters property
+        waiter_count: restaurant.waiters?.[0]?.count || 0
       }));
 
       setRestaurants(formattedData);
@@ -80,7 +101,7 @@ const Restaurants = () => {
     fetchRestaurants();
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | undefined) => {
     switch (status) {
       case 'active':
         return <Badge className="bg-green-500">Ativo</Badge>;
@@ -111,7 +132,7 @@ const Restaurants = () => {
         
         <Button asChild>
           <Link to="/admin/restaurants/new">
-            <BadgePlus className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Novo Restaurante
           </Link>
         </Button>
@@ -186,7 +207,7 @@ const Restaurants = () => {
                   <TableRow key={restaurant.id}>
                     <TableCell className="font-medium">{restaurant.name}</TableCell>
                     <TableCell>{restaurant.responsible_name || 'Não informado'}</TableCell>
-                    <TableCell>{getStatusBadge(restaurant.plan_status || 'trial')}</TableCell>
+                    <TableCell>{getStatusBadge(restaurant.plan_status)}</TableCell>
                     <TableCell>{restaurant.waiter_count}</TableCell>
                     <TableCell className="text-right">{restaurant.totalReviews || 0}</TableCell>
                     <TableCell className="text-right">

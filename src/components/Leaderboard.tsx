@@ -14,9 +14,17 @@ export const Leaderboard = () => {
   
   useEffect(() => {
     // Load leaderboard data
-    setLeaderboard(getCurrentLeaderboard());
-    setChampions(getMonthlyChampions());
-    setDaysLeft(getDaysUntilEndOfMonth());
+    const fetchData = async () => {
+      const leaderboardData = await getCurrentLeaderboard();
+      setLeaderboard(leaderboardData);
+      
+      const championsData = await getMonthlyChampions();
+      setChampions(championsData);
+      
+      setDaysLeft(getDaysUntilEndOfMonth());
+    };
+    
+    fetchData();
     
     // Update days counter every day
     const interval = setInterval(() => {
@@ -104,7 +112,7 @@ export const Leaderboard = () => {
                 {champions.map((champion, index) => (
                   <TableRow key={index}>
                     <TableCell>{champion.month} {champion.year}</TableCell>
-                    <TableCell>{champion.waiterName}</TableCell>
+                    <TableCell>{champion.waiterName || champion.waiter_name}</TableCell>
                     <TableCell className="text-right">{champion.clicks}</TableCell>
                   </TableRow>
                 ))}

@@ -1,229 +1,279 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { useToast } from "@/components/ui/use-toast";
-import { Building, Users, Star, BarChart } from "lucide-react";
+import React from 'react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-
-interface DashboardStats {
-  totalRestaurants: number;
-  activeRestaurants: number;
-  totalWaiters: number;
-  totalReviews: number;
-}
+import { useQuery } from '@tanstack/react-query';
+import { BarChart, LineChart, PieChart, Activity, Users, Building, FileText, FileSpreadsheet, Package, FolderArchive, Settings as SettingsIcon } from 'lucide-react';
 
 const Admin = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalRestaurants: 0,
-    activeRestaurants: 0,
-    totalWaiters: 0,
-    totalReviews: 0
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setIsLoading(true);
+  const { user } = useAuth();
+  
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['adminStats'],
+    queryFn: async () => {
+      // Get restaurant count
+      const { count: restaurantCount } = await supabase
+        .from('restaurants')
+        .select('*', { count: 'exact', head: true });
+      
+      // Get waiter count
+      const { count: waiterCount } = await supabase
+        .from('waiters')
+        .select('*', { count: 'exact', head: true });
+      
+      // Get click count
+      const { count: clickCount } = await supabase
+        .from('clicks')
+        .select('*', { count: 'exact', head: true });
+      
+      // Get review count
+      const { count: reviewCount } = await supabase
+        .from('reviews')
+        .select('*', { count: 'exact', head: true });
         
-        // Fetch total restaurants
-        const { count: totalRestaurants, error: restaurantError } = await supabase
-          .from('restaurants')
-          .select('*', { count: 'exact', head: true });
-
-        // Fetch active restaurants (with active plan)
-        const { count: activeRestaurants, error: activeError } = await supabase
-          .from('restaurants')
-          .select('*', { count: 'exact', head: true })
-          .eq('plan_status', 'active');
-
-        // Fetch total waiters
-        const { count: totalWaiters, error: waitersError } = await supabase
-          .from('waiters')
-          .select('*', { count: 'exact', head: true });
-
-        // Fetch total reviews
-        const { count: totalReviews, error: reviewsError } = await supabase
-          .from('reviews')
-          .select('*', { count: 'exact', head: true });
-
-        if (restaurantError || activeError || waitersError || reviewsError) {
-          throw new Error('Error fetching dashboard stats');
-        }
-
-        setStats({
-          totalRestaurants: totalRestaurants || 0,
-          activeRestaurants: activeRestaurants || 0,
-          totalWaiters: totalWaiters || 0,
-          totalReviews: totalReviews || 0
-        });
-      } catch (error) {
-        console.error('Failed to fetch dashboard stats:', error);
-        toast({
-          title: "Erro ao carregar estatísticas",
-          description: "Não foi possível carregar os dados do dashboard",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [toast]);
+      // Get conversion rate
+      const { data: conversions } = await supabase
+        .from('clicks')
+        .select('*', { count: 'exact' })
+        .eq('converted', true);
+      
+      const conversionRate = clickCount > 0 ? (conversions?.length || 0) * 100 / clickCount : 0;
+      
+      // Get active restaurants
+      const { count: activeRestaurants } = await supabase
+        .from('restaurants')
+        .select('*', { count: 'exact', head: true })
+        .eq('plan_status', 'active');
+      
+      // Get trial restaurants
+      const { count: trialRestaurants } = await supabase
+        .from('restaurants')
+        .select('*', { count: 'exact', head: true })
+        .eq('plan_status', 'trial');
+      
+      // Get expired restaurants
+      const { count: expiredRestaurants } = await supabase
+        .from('restaurants')
+        .select('*', { count: 'exact', head: true })
+        .eq('plan_status', 'expired');
+      
+      // Get canceled restaurants
+      const { count: canceledRestaurants } = await supabase
+        .from('restaurants')
+        .select('*', { count: 'exact', head: true })
+        .eq('plan_status', 'canceled');
+      
+      return {
+        restaurantCount: restaurantCount || 0,
+        waiterCount: waiterCount || 0,
+        clickCount: clickCount || 0,
+        reviewCount: reviewCount || 0,
+        conversionRate,
+        activeRestaurants: activeRestaurants || 0,
+        trialRestaurants: trialRestaurants || 0,
+        expiredRestaurants: expiredRestaurants || 0,
+        canceledRestaurants: canceledRestaurants || 0
+      };
+    }
+  });
 
   return (
     <AdminLayout title="Dashboard">
-      <div className="mb-6">
-        <h2 className="text-lg font-medium text-gray-800">
-          Visão Geral do Sistema
-        </h2>
-        <p className="text-sm text-gray-500">
-          Estatísticas gerais da plataforma WaiterLink
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold tracking-tight">Welcome back, {user?.email}</h2>
+        <p className="text-muted-foreground">
+          Here's an overview of your waiter link platform
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Restaurantes</CardTitle>
-            <Building className="h-4 w-4 text-gray-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Restaurants
+            </CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? "..." : stats.totalRestaurants}
+              {isLoading ? "..." : stats?.restaurantCount}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {stats.activeRestaurants} ativos
+            <p className="text-xs text-muted-foreground">
+              Active: {isLoading ? "..." : stats?.activeRestaurants}
             </p>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Garçons</CardTitle>
-            <Users className="h-4 w-4 text-gray-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Waiters
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? "..." : stats.totalWaiters}
+              {isLoading ? "..." : stats?.waiterCount}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Cadastrados na plataforma
+            <p className="text-xs text-muted-foreground">
+              {isLoading ? "..." : (stats?.waiterCount && stats.restaurantCount ? (stats.waiterCount / stats.restaurantCount).toFixed(1) : 0)} per restaurant avg.
             </p>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Avaliações</CardTitle>
-            <Star className="h-4 w-4 text-gray-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Clicks
+            </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? "..." : stats.totalReviews}
+              {isLoading ? "..." : stats?.clickCount}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Gerenciadas pelo sistema
+            <p className="text-xs text-muted-foreground">
+              {isLoading ? "..." : stats?.conversionRate.toFixed(1)}% conversion rate
             </p>
           </CardContent>
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-            <BarChart className="h-4 w-4 text-gray-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Reviews
+            </CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? "..." : 
-                (stats.totalWaiters > 0 ? 
-                  `${Math.round((stats.totalReviews / stats.totalWaiters) * 100)}%` : 
-                  "0%")
-              }
+              {isLoading ? "..." : stats?.reviewCount}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Média de conversões
+            <p className="text-xs text-muted-foreground">
+              {isLoading ? "..." : (stats?.reviewCount && stats.clickCount ? (stats.reviewCount * 100 / stats.clickCount).toFixed(1) : 0)}% of clicks
             </p>
           </CardContent>
         </Card>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="col-span-2">
           <CardHeader>
-            <CardTitle>Acesso Rápido</CardTitle>
-            <CardDescription>Navegue pelas principais seções</CardDescription>
+            <CardTitle>Click Analysis</CardTitle>
+            <CardDescription>
+              Click metrics and conversion rates over time
+            </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4">
-            <Button asChild variant="outline" className="w-full justify-start">
-              <Link to="/admin/restaurants">
-                <Building className="mr-2 h-4 w-4" />
-                Gerenciar Restaurantes
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full justify-start">
-              <Link to="/admin/exports">
-                <Download className="mr-2 h-4 w-4" />
-                Exportar Relatórios
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full justify-start">
-              <Link to="/admin/backups">
-                <Folder className="mr-2 h-4 w-4" />
-                Gerenciar Backups
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full justify-start">
-              <Link to="/admin/settings">
-                <Settings className="mr-2 h-4 w-4" />
-                Configurações do Sistema
-              </Link>
-            </Button>
+          <CardContent className="h-[300px] flex items-center justify-center">
+            <LineChart className="h-16 w-16 text-muted-foreground" />
+            <p className="ml-4 text-muted-foreground">Analysis chart will appear here</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader>
-            <CardTitle>Estatísticas de Sistema</CardTitle>
-            <CardDescription>Desempenho geral da plataforma</CardDescription>
+            <CardTitle>Plan Distribution</CardTitle>
+            <CardDescription>
+              Restaurant distribution by plan
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Restaurantes ativos:</span>
-                <span className="font-medium">{stats.activeRestaurants}/{stats.totalRestaurants}</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary" 
-                  style={{ 
-                    width: `${stats.totalRestaurants > 0 ? 
-                      (stats.activeRestaurants / stats.totalRestaurants) * 100 : 0}%` 
-                  }}
-                ></div>
-              </div>
-            </div>
-            
-            <div className="pt-2">
-              <div className="flex flex-col space-y-1.5">
-                <span className="text-sm font-medium">Funcionamento do Sistema</span>
-                <div className="flex items-center space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm">Todos os serviços operando normalmente</span>
+          <CardContent className="h-[300px]">
+            <div className="h-full flex flex-col items-center justify-center">
+              <PieChart className="h-16 w-16 text-muted-foreground mb-4" />
+              {!isLoading && (
+                <div className="w-full space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="flex items-center">
+                      <span className="h-3 w-3 rounded-full bg-green-500 mr-2"></span>
+                      Active
+                    </span>
+                    <span>{stats?.activeRestaurants}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center">
+                      <span className="h-3 w-3 rounded-full bg-blue-500 mr-2"></span>
+                      Trial
+                    </span>
+                    <span>{stats?.trialRestaurants}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center">
+                      <span className="h-3 w-3 rounded-full bg-red-500 mr-2"></span>
+                      Expired
+                    </span>
+                    <span>{stats?.expiredRestaurants}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center">
+                      <span className="h-3 w-3 rounded-full bg-gray-500 mr-2"></span>
+                      Canceled
+                    </span>
+                    <span>{stats?.canceledRestaurants}</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </CardContent>
-          <CardFooter>
-            <p className="text-xs text-muted-foreground">
-              Última atualização: {new Date().toLocaleString()}
+        </Card>
+      </div>
+      
+      <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:bg-gray-50 cursor-pointer">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-lg font-medium">
+              Exports
+            </CardTitle>
+            <FileSpreadsheet className="h-5 w-5" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Generate reports and export data in CSV format
             </p>
-          </CardFooter>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:bg-gray-50 cursor-pointer">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-lg font-medium">
+              Backups
+            </CardTitle>
+            <FolderArchive className="h-5 w-5" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Manage database backups and restoration
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:bg-gray-50 cursor-pointer">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-lg font-medium">
+              Settings
+            </CardTitle>
+            <SettingsIcon className="h-5 w-5" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Configure platform settings and defaults
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:bg-gray-50 cursor-pointer">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-lg font-medium">
+              API Access
+            </CardTitle>
+            <Package className="h-5 w-5" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              View API keys and documentation
+            </p>
+          </CardContent>
         </Card>
       </div>
     </AdminLayout>

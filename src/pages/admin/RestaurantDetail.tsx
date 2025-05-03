@@ -10,12 +10,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Calendar, Download, Save, Trash } from 'lucide-react';
+import { ArrowLeft, Calendar, Download, Save, Trash, PlusCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Restaurant, Waiter } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Helper to map database fields to client model
+const mapRestaurantFromDb = (dbRestaurant: any): Restaurant => {
+  return {
+    id: dbRestaurant.id,
+    name: dbRestaurant.name,
+    googleReviewUrl: dbRestaurant.google_review_url,
+    responsible_name: dbRestaurant.responsible_name,
+    responsible_email: dbRestaurant.responsible_email,
+    responsible_phone: dbRestaurant.responsible_phone,
+    totalReviews: dbRestaurant.total_reviews,
+    initialRating: dbRestaurant.initial_rating,
+    currentRating: dbRestaurant.current_rating,
+    positiveFeedback: dbRestaurant.positive_feedback,
+    negativeFeedback: dbRestaurant.negative_feedback,
+    plan_status: dbRestaurant.plan_status,
+    plan_expiry_date: dbRestaurant.plan_expiry_date,
+    created_at: dbRestaurant.created_at,
+    updated_at: dbRestaurant.updated_at
+  };
+};
 
 const RestaurantDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +76,8 @@ const RestaurantDetail = () => {
 
       if (restaurantError) throw restaurantError;
 
-      setRestaurant(restaurantData);
+      const mappedRestaurant = mapRestaurantFromDb(restaurantData);
+      setRestaurant(mappedRestaurant);
       setFormData({
         name: restaurantData.name,
         google_review_url: restaurantData.google_review_url,
@@ -284,7 +306,7 @@ const RestaurantDetail = () => {
                   <CardDescription>Lista de garçons deste restaurante</CardDescription>
                 </div>
                 <Button size="sm">
-                  <BadgePlus className="mr-2 h-4 w-4" />
+                  <PlusCircle className="mr-2 h-4 w-4" />
                   Adicionar Garçom
                 </Button>
               </div>

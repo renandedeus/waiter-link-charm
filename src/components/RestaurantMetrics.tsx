@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -38,14 +38,30 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
     positiveFeedback: restaurant.positiveFeedback || '',
     negativeFeedback: restaurant.negativeFeedback || ''
   });
+  const [totalClicks, setTotalClicks] = useState(0);
+  const [totalConversions, setTotalConversions] = useState(0);
+  const [conversionRate, setConversionRate] = useState(0);
+  const [newReviewsThisMonth, setNewReviewsThisMonth] = useState(0);
   const { toast } = useToast();
   
-  const totalClicks = getTotalClicks();
-  const totalConversions = getTotalConversions();
-  const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
-  
-  // Calculate new reviews this month (simulation - 30% of total clicks)
-  const newReviewsThisMonth = Math.floor(totalClicks * 0.3);
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      const clicks = await getTotalClicks();
+      const conversions = await getTotalConversions();
+      
+      setTotalClicks(clicks);
+      setTotalConversions(conversions);
+      
+      // Calculate conversion rate
+      const rate = clicks > 0 ? (conversions / clicks) * 100 : 0;
+      setConversionRate(rate);
+      
+      // Calculate new reviews this month (simulation - 30% of total clicks)
+      setNewReviewsThisMonth(Math.floor(clicks * 0.3));
+    };
+    
+    fetchMetrics();
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -57,31 +73,40 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
     }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Update restaurant info
-    const updatedRestaurant = setRestaurantInfo(
-      restaurant.name,
-      restaurant.googleReviewUrl,
-      formData.totalReviews,
-      formData.initialRating,
-      formData.currentRating
-    );
-    
-    // Update feedback
-    updateRestaurantFeedback(
-      formData.positiveFeedback,
-      formData.negativeFeedback
-    );
-    
-    onUpdate(updatedRestaurant);
-    setIsEditing(false);
-    
-    toast({
-      title: "Information updated",
-      description: "Restaurant metrics have been updated successfully.",
-    });
+    try {
+      // Update restaurant info
+      const updatedRestaurant = await setRestaurantInfo(
+        restaurant.name,
+        restaurant.googleReviewUrl,
+        formData.totalReviews,
+        formData.initialRating,
+        formData.currentRating
+      );
+      
+      // Update feedback
+      await updateRestaurantFeedback(
+        formData.positiveFeedback,
+        formData.negativeFeedback
+      );
+      
+      onUpdate(updatedRestaurant);
+      setIsEditing(false);
+      
+      toast({
+        title: "Information updated",
+        description: "Restaurant metrics have been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating restaurant metrics:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update restaurant metrics.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { RestaurantForm } from '@/components/RestaurantForm';
 import { WaiterForm } from '@/components/WaiterForm';
@@ -9,7 +9,7 @@ import { Leaderboard } from '@/components/Leaderboard';
 import { RestaurantMetrics } from '@/components/RestaurantMetrics';
 import { ReviewsList } from '@/components/ReviewsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AuthContext } from '@/App';
+import { useAuth } from '@/contexts/AuthContext';
 import { Waiter, Restaurant, Review } from '@/types';
 import { 
   createWaiter, 
@@ -24,31 +24,41 @@ const Dashboard = () => {
   const [activePage, setActivePage] = useState<'dashboard' | 'waiters'>('dashboard');
   const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'leaderboard' | 'reviews'>('overview');
   const [waiters, setWaiters] = useState<Waiter[]>([]);
-  const [restaurant, setRestaurant] = useState<Restaurant>({ name: '', googleReviewUrl: '' });
-  const auth = useContext(AuthContext);
+  const [restaurant, setRestaurant] = useState<Restaurant>({ id: '', name: '', googleReviewUrl: '' });
+  const auth = useAuth();
   
   useEffect(() => {
     // Initialize sample data for development
-    initializeSampleData();
-    
-    // Load initial data
-    setWaiters(getAllWaiters());
-    setRestaurant(getRestaurantInfo());
+    const initData = async () => {
+      await initializeSampleData();
+      
+      // Load initial data
+      const fetchedWaiters = await getAllWaiters();
+      setWaiters(fetchedWaiters);
+      
+      const fetchedRestaurant = await getRestaurantInfo();
+      setRestaurant(fetchedRestaurant);
+    };
+
+    initData();
   }, []);
 
-  const handleAddWaiter = (name: string, email: string, whatsapp: string) => {
-    const newWaiter = createWaiter(name, email, whatsapp);
+  const handleAddWaiter = async (name: string, email: string, whatsapp: string) => {
+    const newWaiter = await createWaiter(name, email, whatsapp);
     setWaiters([...waiters, newWaiter]);
   };
 
-  const handleDeleteWaiter = (id: string) => {
-    deleteWaiter(id);
+  const handleDeleteWaiter = async (id: string) => {
+    await deleteWaiter(id);
     setWaiters(waiters.filter(w => w.id !== id));
   };
 
-  const handleSaveRestaurant = (name: string, googleReviewUrl: string) => {
-    const updatedRestaurant = setRestaurantInfo(name, googleReviewUrl);
-    setRestaurant(updatedRestaurant);
+  const handleSaveRestaurant = async (name: string, googleReviewUrl: string) => {
+    const updatedRestaurant = await setRestaurantInfo(name, googleReviewUrl);
+    setRestaurant({
+      ...updatedRestaurant,
+      googleReviewUrl: updatedRestaurant.google_review_url
+    });
   };
   
   const handleRestaurantUpdate = (updatedRestaurant: Restaurant) => {
