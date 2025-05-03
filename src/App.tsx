@@ -1,60 +1,121 @@
 
-import React, { useState, createContext } from 'react';
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/admin/Index";
+import AdminLogin from "./pages/admin/Login";
+import AdminRestaurants from "./pages/admin/Restaurants";
+import AdminRestaurantDetail from "./pages/admin/RestaurantDetail";
+import AdminExports from "./pages/admin/Exports";
+import AdminSettings from "./pages/admin/Settings";
+import AdminBackups from "./pages/admin/Backups";
 import NotFound from "./pages/NotFound";
-
-// Mock authentication context (to be replaced with Supabase integration)
-export const AuthContext = createContext({
-  isAuthenticated: false,
-  login: (email: string, password: string) => {},
-  logout: () => {},
-});
 
 const queryClient = new QueryClient();
 
+// Protected route component
+const ProtectedRoute: React.FC<{ 
+  element: React.ReactNode;
+  requiredAdmin?: boolean;
+  redirectTo?: string;
+}> = ({ 
+  element, 
+  requiredAdmin = false,
+  redirectTo = '/' 
+}) => {
+  const { user, isAdmin, isLoading } = useAuth();
+  
+  // Show loading state if authentication is still being checked
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center">Carregando...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to={redirectTo} replace />;
+  }
+  
+  if (requiredAdmin && !isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  
+  return <>{element}</>;
+};
+
+// Admin protected route
+const AdminRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
+  return <ProtectedRoute element={element} requiredAdmin={true} redirectTo="/admin/login" />;
+};
+
+// Client protected route
+const ClientRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
+  return <ProtectedRoute element={element} redirectTo="/" />;
+};
+
+// Auth check for redirects based on auth state
+const AuthRedirect: React.FC<{ 
+  element: React.ReactNode;
+  whenAuthenticated?: string;
+  whenAdmin?: string;
+}> = ({ 
+  element, 
+  whenAuthenticated,
+  whenAdmin
+}) => {
+  const { user, isAdmin, isLoading } = useAuth();
+  
+  // Show loading state if authentication is still being checked
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center">Carregando...</div>;
+  }
+  
+  if (user && isAdmin && whenAdmin) {
+    return <Navigate to={whenAdmin} replace />;
+  }
+  
+  if (user && whenAuthenticated) {
+    return <Navigate to={whenAuthenticated} replace />;
+  }
+  
+  return <>{element}</>;
+};
+
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Mock authentication (to be replaced with Supabase integration)
-  const loginHandler = (email: string, password: string) => {
-    // For demo purposes, simple validation
-    if (email && password) {
-      setIsAuthenticated(true);
-    }
-  };
-
-  const logoutHandler = () => {
-    setIsAuthenticated(false);
-  };
-
-  const authContextValue = {
-    isAuthenticated,
-    login: loginHandler,
-    logout: logoutHandler,
-  };
-
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthContext.Provider value={authContextValue}>
+      <AuthProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={!isAuthenticated ? <Index /> : <Navigate to="/dashboard" />} />
-              <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/" />} />
+              {/* Public routes */}
+              <Route path="/" element={<AuthRedirect element={<Index />} whenAuthenticated="/dashboard" whenAdmin="/admin" />} />
               <Route path="/r/:id" element={<Navigate to="/" />} />
+              
+              {/* Client routes */}
+              <Route path="/dashboard" element={<ClientRoute element={<Dashboard />} />} />
+              
+              {/* Admin routes */}
+              <Route path="/admin/login" element={<AuthRedirect element={<AdminLogin />} whenAdmin="/admin" />} />
+              <Route path="/admin" element={<AdminRoute element={<Admin />} />} />
+              <Route path="/admin/restaurants" element={<AdminRoute element={<AdminRestaurants />} />} />
+              <Route path="/admin/restaurants/:id" element={<AdminRoute element={<AdminRestaurantDetail />} />} />
+              <Route path="/admin/exports" element={<AdminRoute element={<AdminExports />} />} />
+              <Route path="/admin/settings" element={<AdminRoute element={<AdminSettings />} />} />
+              <Route path="/admin/backups" element={<AdminRoute element={<AdminBackups />} />} />
+              
+              {/* Not found route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </AuthContext.Provider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

@@ -1,73 +1,87 @@
-# Welcome to your Lovable project
 
-## Project info
+# Waiter Link - Platform Admin Documentation
 
-**URL**: https://lovable.dev/projects/f5e20780-b358-4307-85c2-318e499e489a
+This document provides information about the administration features of the Waiter Link platform.
 
-## How can I edit this code?
+## Admin Features Overview
 
-There are several ways of editing your application.
+The platform includes a comprehensive admin panel with the following capabilities:
 
-**Use Lovable**
+### 🧑‍💼 Admin Panel (Internal Backoffice):
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f5e20780-b358-4307-85c2-318e499e489a) and start prompting.
+* Protected area with exclusive login for platform team members
+* List of all registered restaurants with:
+  * Restaurant name
+  * Manager's name
+  * Plan status (active, expired, trial, canceled)
+  * Number of active waiters
+  * Total reviews and clicks
+* Manual editing of restaurant data (name, review link, plan)
+* View list of waiters with individual click counts
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🧾 Export and Reports:
 
-**Use your preferred IDE**
+* Export monthly data in CSV:
+  * Clicks per waiter
+  * Monthly ranking
+  * Review evolution
+* PDF generation for automatic sending to restaurant owners
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🧩 Accessibility:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* High contrast texts and accessible fonts
+* Screen reader support (aria-labels on buttons and charts)
+* Complete responsiveness: mobile, tablet, desktop
 
-Follow these steps:
+### ⚡ Performance:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+* Fast loading with local cache for dashboards
+* Pagination in long lists of waiters and reviews
+* Link and QR Code indexing to avoid duplication
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 🔐 Security:
 
-# Step 3: Install the necessary dependencies.
-npm i
+* Unique tokens per waiter with configurable expiration date
+* Protection against spam/crawlers in redirection links
+* Access logs to the admin panel and for each click on links
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### 📂 Backup:
+
+* Automatic daily backup of data in Supabase Storage
+* Manual restoration option via admin panel
+
+## How to Access the Admin Panel
+
+1. Create an admin user (required before first login)
+2. Access the admin login page at: `/admin/login`
+3. Enter your admin email and password
+
+## Creating Your First Admin User
+
+To create the first admin user, you need to call the create-admin Edge Function with the following parameters:
+
+```json
+{
+  "email": "your-admin-email@example.com",
+  "name": "Your Name",
+  "adminKey": "your-admin-creation-key"
+}
 ```
 
-**Edit a file directly in GitHub**
+You need to set the `ADMIN_CREATION_KEY` secret in your Supabase project settings to secure this process.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Admin Sections
 
-**Use GitHub Codespaces**
+- **Dashboard**: Overview of key metrics
+- **Restaurants**: Manage all restaurants
+- **Exports**: Generate and download reports
+- **Backups**: Manage system backups
+- **Settings**: Configure system parameters
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Recommended Browser
 
-## What technologies are used for this project?
+For the best experience, we recommend using the latest version of Chrome, Firefox, or Safari.
 
-This project is built with:
+## Support
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/f5e20780-b358-4307-85c2-318e499e489a) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+If you need assistance, contact the development team at support@waiterlink.com.
