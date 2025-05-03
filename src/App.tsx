@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, createContext } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,7 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 // Mock authentication context (to be replaced with Supabase integration)
-export const AuthContext = React.createContext({
+export const AuthContext = createContext({
   isAuthenticated: false,
   login: (email: string, password: string) => {},
   logout: () => {},
