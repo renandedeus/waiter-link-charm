@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -221,7 +220,7 @@ const Index = () => {
       <div className="w-full max-w-md px-4">
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Waiter Link</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Target Avaliações</CardTitle>
             <CardDescription className="text-center">
               Gerencie avaliações do seu restaurante e motive seus garçons
             </CardDescription>

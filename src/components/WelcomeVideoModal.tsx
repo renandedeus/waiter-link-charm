@@ -13,7 +13,7 @@ const WelcomeVideoModal = ({ videoId, isOpen, onClose }: WelcomeVideoModalProps)
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Bem-vindo ao Waiter Link!</DialogTitle>
+          <DialogTitle>Bem-vindo ao Target Avaliações!</DialogTitle>
         </DialogHeader>
         <div className="relative pt-[56.25%] w-full">
           <iframe

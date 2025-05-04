@@ -24,7 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
   return (
     <div className="w-64 bg-white shadow-md h-screen flex flex-col">
       <div className="p-4 border-b">
-        <h2 className="text-xl font-bold">Waiter Link</h2>
+        <h2 className="text-xl font-bold">Target Avaliações</h2>
         <p className="text-sm text-gray-500">Gerencie avaliações e desempenho</p>
       </div>
       <div className="p-4 flex-1">
