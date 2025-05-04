@@ -1,4 +1,3 @@
-
 export interface Waiter {
   id: string;
   trackingId: string;
@@ -32,7 +31,14 @@ export interface Restaurant {
   updated_at?: string;
   recentReviews?: Review[];
   waiter_count?: number; // computed field
-  google_review_url?: string; // added for compatibility with database fields
+  
+  // Duplicamos os campos com snake_case para compatibilidade com o banco de dados
+  google_review_url?: string; 
+  total_reviews?: number;
+  initial_rating?: number;
+  current_rating?: number;
+  positive_feedback?: string;
+  negative_feedback?: string;
 }
 
 export interface Review {
@@ -47,7 +53,6 @@ export interface Review {
   translated?: boolean;
   translated_content?: string;  // Using snake_case to match database
   translatedContent?: string;   // Adding camelCase for component usage
-  response?: string;
 }
 
 export interface LeaderboardEntry {
