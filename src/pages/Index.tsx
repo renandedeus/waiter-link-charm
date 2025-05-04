@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,12 +36,20 @@ const Index = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
-        setError(error.message || 'Erro ao fazer login');
-        toast({
-          title: "Falha no login",
-          description: error.message || 'Credenciais inválidas',
-          variant: "destructive",
-        });
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email não confirmado",
+            description: "Por favor, confirme seu email antes de fazer login ou cadastre-se novamente.",
+            variant: "warning",
+          });
+        } else {
+          setError(error.message || 'Erro ao fazer login');
+          toast({
+            title: "Falha no login",
+            description: error.message || 'Credenciais inválidas',
+            variant: "destructive",
+          });
+        }
       } else {
         navigate('/dashboard');
       }
@@ -70,6 +78,24 @@ const Index = () => {
     setIsLoading(true);
     
     try {
+      // Primeiro, verificamos se o usuário já existe
+      const { data: existingUser } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (existingUser?.user) {
+        toast({
+          title: "Usuário já existe",
+          description: "Este email já está registrado. Por favor, faça login.",
+          variant: "destructive",
+        });
+        setActiveTab('login');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Se não existe, tentamos criar o usuário
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -77,6 +103,7 @@ const Index = () => {
           data: {
             name,
           },
+          emailRedirectTo: window.location.origin,
         },
       });
       
@@ -88,11 +115,21 @@ const Index = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Cadastro realizado!",
-          description: "Por favor, verifique seu email para confirmar sua conta.",
-        });
-        setActiveTab('login');
+        if (data?.user?.identities?.length === 0) {
+          toast({
+            title: "Email já registrado",
+            description: "Este email já está registrado. Por favor, faça login.",
+            variant: "info",
+          });
+          setActiveTab('login');
+        } else {
+          toast({
+            title: "Cadastro realizado!",
+            description: "Para simplificar o teste, você já pode fazer login sem precisar confirmar o email.",
+            variant: "success",
+          });
+          setActiveTab('login');
+        }
       }
     } catch (err) {
       console.error('Signup error:', err);

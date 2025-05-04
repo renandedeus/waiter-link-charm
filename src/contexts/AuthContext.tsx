@@ -68,11 +68,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkAdminStatus = async (): Promise<boolean> => {
+    if (!user) {
+      setIsAdmin(false);
+      setIsLoading(false);
+      return false;
+    }
+
     try {
       const { data, error } = await supabase
         .from('admin_users')
         .select('id, email, role')
-        .eq('email', user?.email)
+        .eq('email', user.email)
         .single();
 
       if (error) {
