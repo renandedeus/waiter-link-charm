@@ -43,9 +43,10 @@ const Dashboard = () => {
     initData();
   }, []);
 
-  const handleAddWaiter = async (name: string, email: string, whatsapp: string) => {
+  const handleAddWaiter = async (name: string, email: string, whatsapp: string): Promise<Waiter> => {
     const newWaiter = await createWaiter(name, email, whatsapp);
     setWaiters([...waiters, newWaiter]);
+    return newWaiter;
   };
 
   const handleDeleteWaiter = async (id: string) => {
