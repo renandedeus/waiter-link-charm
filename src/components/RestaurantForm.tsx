@@ -19,8 +19,9 @@ export const RestaurantForm = ({ restaurant, onSave }: RestaurantFormProps) => {
   const { toast } = useToast();
 
   const validateUrl = (url: string) => {
-    // Simple validation for Google review URL format
-    return url.includes('google.com');
+    // Validação melhorada para URLs do Google Review
+    // Aceita tanto google.com quanto g.page
+    return url.includes('google.com') || url.includes('g.page');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,7 +36,7 @@ export const RestaurantForm = ({ restaurant, onSave }: RestaurantFormProps) => {
     if (!googleReviewUrl) {
       newErrors.url = "URL do Google Review é obrigatório";
     } else if (!validateUrl(googleReviewUrl)) {
-      newErrors.url = "Por favor, insira uma URL do Google válida";
+      newErrors.url = "Por favor, insira uma URL do Google válida (deve conter 'google.com' ou 'g.page')";
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -77,7 +78,7 @@ export const RestaurantForm = ({ restaurant, onSave }: RestaurantFormProps) => {
               id="review-url"
               value={googleReviewUrl}
               onChange={(e) => setGoogleReviewUrl(e.target.value)}
-              placeholder="https://g.page/r/..."
+              placeholder="https://g.page/r/... ou https://www.google.com/..."
             />
             {errors.url && <p className="text-sm text-red-500">{errors.url}</p>}
           </div>
