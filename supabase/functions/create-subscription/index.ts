@@ -16,7 +16,18 @@ serve(async (req) => {
 
   try {
     console.log("Função create-subscription iniciada");
-    const { planType } = await req.json();
+    
+    // Parse the request body
+    let body;
+    try {
+      body = await req.json();
+      console.log("Corpo da requisição:", JSON.stringify(body));
+    } catch (e) {
+      console.error("Erro ao parsear corpo da requisição:", e);
+      throw new Error("Corpo da requisição inválido");
+    }
+    
+    const { planType } = body;
     
     console.log("Tipo de plano recebido:", planType);
     
@@ -26,33 +37,49 @@ serve(async (req) => {
     }
     
     // Usar o cliente Supabase para autenticação do usuário
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Configuração do Supabase ausente");
+      throw new Error("Configuração do servidor incompleta");
+    }
+    
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
     
     // Obter o token de autorização e validar o usuário
-    const authHeader = req.headers.get("Authorization")!;
-    console.log("Autorizando usuário...");
+    const authHeader = req.headers.get("Authorization");
+    console.log("Verificando cabeçalho de autorização");
     
     if (!authHeader) {
+      console.error("Header de autorização ausente");
       throw new Error("Header de autorização ausente");
     }
     
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
+    console.log("Token obtido, autenticando usuário");
+    
+    const { data, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError) {
+      console.error("Erro na autenticação:", userError);
+      throw new Error(`Erro na autenticação: ${userError.message}`);
+    }
+    
     const user = data.user;
     
-    console.log("Usuário autenticado:", user?.email);
-    
     if (!user?.email) {
+      console.error("Usuário não autenticado ou email não disponível");
       throw new Error("Usuário não autenticado ou email não disponível");
     }
+    
+    console.log("Usuário autenticado:", user.email);
     
     // Inicializar Stripe com a chave secreta
     console.log("Inicializando Stripe...");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
+      console.error("STRIPE_SECRET_KEY não configurada");
       throw new Error("Variável de ambiente STRIPE_SECRET_KEY não configurada");
     }
     
@@ -61,7 +88,7 @@ serve(async (req) => {
     });
     
     // Verificar se o cliente já existe no Stripe
-    console.log("Verificando cliente no Stripe...");
+    console.log("Verificando cliente no Stripe para:", user.email);
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     
@@ -109,6 +136,7 @@ serve(async (req) => {
     
     if (paymentType === "subscription") {
       // Criar um produto e um preço para a assinatura
+      console.log("Criando produto e preço para assinatura");
       const product = await stripe.products.create({
         name: description,
         metadata: {
@@ -125,6 +153,7 @@ serve(async (req) => {
       });
       
       // Criar uma intent de configuração de assinatura
+      console.log("Criando Setup Intent");
       const setupIntent = await stripe.setupIntents.create({
         customer: customerId,
         payment_method_types: ["card"],
@@ -144,6 +173,7 @@ serve(async (req) => {
       };
     } else {
       // Criar intent de pagamento para pagamentos únicos
+      console.log("Criando Payment Intent");
       const paymentIntent = await stripe.paymentIntents.create({
         amount,
         currency: "brl",
@@ -174,22 +204,29 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
     
-    await supabaseServiceClient.from("subscribers").upsert({
-      user_id: user.id,
-      email: user.email,
-      stripe_customer_id: customerId,
-      subscription_status: "pending",
-      plan_type: planType,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
-    console.log("Assinante registrado com sucesso");
+    try {
+      await supabaseServiceClient.from("subscribers").upsert({
+        user_id: user.id,
+        email: user.email,
+        stripe_customer_id: customerId,
+        subscription_status: "pending",
+        plan_type: planType,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      console.log("Assinante registrado com sucesso");
+    } catch (dbError) {
+      console.error("Erro ao gravar no banco de dados:", dbError);
+      // Continuar mesmo com erro de BD para não impedir o fluxo de pagamento
+    }
     
+    console.log("Retornando resposta de sucesso");
     return new Response(JSON.stringify(paymentResponse), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
     console.error("ERRO:", error instanceof Error ? error.message : String(error));
+    console.error("Stack trace:", error instanceof Error ? error.stack : "Sem stack trace");
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

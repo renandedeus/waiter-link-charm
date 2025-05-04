@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Info, Loader2, CreditCard } from 'lucide-react';
+import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StripePaymentForm from '@/components/StripePaymentForm';
 
@@ -27,6 +27,7 @@ const PaymentGateway = () => {
   const [selectedPlan, setSelectedPlan] = useState('mensal');
   const [activeTab, setActiveTab] = useState('select-plan');
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const canceled = searchParams.get('canceled') === 'true';
 
   useEffect(() => {
@@ -41,6 +42,7 @@ const PaymentGateway = () => {
 
   const handleCreatePaymentIntent = async (planType: string) => {
     setIsProcessing(true);
+    setError(null);
     
     try {
       console.log('Iniciando processo de pagamento para plano:', planType);
@@ -58,11 +60,14 @@ const PaymentGateway = () => {
       if (data?.clientSecret) {
         setPaymentResponse(data);
         setActiveTab('payment');
+      } else if (data?.error) {
+        throw new Error(data.error);
       } else {
         throw new Error('Não foi possível obter os dados de pagamento');
       }
     } catch (error) {
       console.error('Erro ao criar intent de pagamento:', error);
+      setError(error.message || "Ocorreu um erro ao processar sua solicitação de pagamento");
       toast({
         title: "Erro no processamento",
         description: error.message || "Ocorreu um erro ao processar sua solicitação de pagamento",
@@ -155,6 +160,22 @@ const PaymentGateway = () => {
                 </TabsList>
                 
                 <TabsContent value="select-plan" className="space-y-4 mt-4">
+                  {error && (
+                    <div className="bg-red-50 border border-red-300 rounded-md p-4 mb-6">
+                      <div className="flex items-start">
+                        <AlertTriangle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-red-800">
+                            <strong>Erro no processamento:</strong> {error}
+                          </p>
+                          <p className="text-sm text-red-700 mt-1">
+                            Por favor, tente novamente ou entre em contato com o suporte.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                
                   <div className="mb-8">
                     <h3 className="text-lg font-medium mb-4">Escolha seu plano</h3>
                     <RadioGroup 
