@@ -52,7 +52,14 @@ const LoginForm = ({
       if (error) {
         console.error("Login error details:", error);
         
-        if (error.message.includes('Email not confirmed')) {
+        // Melhor tratamento para erros comuns
+        if (error.message.includes('invalid credentials') || error.message.includes('Invalid login credentials')) {
+          toast({
+            title: "Credenciais inválidas",
+            description: "Email ou senha incorretos. Verifique suas credenciais e tente novamente.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Email not confirmed')) {
           toast({
             title: "Email não confirmado",
             description: "Por favor, confirme seu email antes de fazer login ou cadastre-se novamente.",
@@ -61,11 +68,16 @@ const LoginForm = ({
         } else {
           toast({
             title: "Falha no login",
-            description: error.message || 'Credenciais inválidas',
+            description: error.message || 'Ocorreu um erro ao fazer login',
             variant: "destructive",
           });
         }
       } else {
+        toast({
+          title: "Login bem-sucedido",
+          description: "Você será redirecionado para o dashboard",
+          variant: "success",
+        });
         navigate('/dashboard');
       }
     } catch (err) {
@@ -101,7 +113,7 @@ const LoginForm = ({
         <Input 
           id="login-email" 
           type="email" 
-          placeholder="restaurant@example.com"
+          placeholder="seu-email@exemplo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           aria-label="Email"

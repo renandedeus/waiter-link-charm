@@ -15,9 +15,13 @@ const TestCredentials = () => {
     setIsCreating(true);
     
     try {
-      // Chave administrativa para a função (normalmente seria armazenada de forma segura)
-      // Em um ambiente de produção, esse botão não estaria disponível
+      // Chave administrativa para a função (em ambiente de produção, esse botão não estaria disponível)
       const adminKey = 'desenvolvimento-apenas';
+      
+      toast({
+        title: 'Criando usuários de teste',
+        description: 'Aguarde enquanto criamos os usuários de teste...',
+      });
       
       // Chamar a função Edge Function para criar usuários de teste
       const { data, error } = await supabase.functions.invoke('create-test-users', {
@@ -28,21 +32,22 @@ const TestCredentials = () => {
         console.error('Erro ao criar usuários de teste:', error);
         toast({
           title: 'Erro',
-          description: 'Não foi possível criar os usuários de teste.',
+          description: `Não foi possível criar os usuários de teste: ${error.message}`,
           variant: 'destructive',
         });
       } else {
         console.log('Usuários de teste criados:', data);
         toast({
           title: 'Sucesso',
-          description: 'Usuários de teste criados com sucesso.',
+          description: 'Usuários de teste criados com sucesso! Agora você pode fazer login.',
+          variant: 'success',
         });
       }
     } catch (error) {
       console.error('Erro ao processar a requisição:', error);
       toast({
         title: 'Erro',
-        description: 'Ocorreu um erro ao processar a requisição.',
+        description: `Ocorreu um erro ao processar a requisição: ${error instanceof Error ? error.message : String(error)}`,
         variant: 'destructive',
       });
     } finally {

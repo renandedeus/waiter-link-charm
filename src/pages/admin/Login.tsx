@@ -16,7 +16,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { signIn } = useAuth();
+  const { signIn, checkAdminStatus } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -42,18 +42,45 @@ const AdminLogin = () => {
       
       if (error) {
         console.error("Admin login error details:", error);
-        setError(`Erro no login: ${error.message}`);
-        toast({
-          title: "Erro no login",
-          description: "Credenciais inválidas. Por favor, verifique seu email e senha.",
-          variant: "destructive",
-        });
+        
+        // Melhor tratamento para erros comuns
+        if (error.message.includes('invalid credentials') || error.message.includes('Invalid login credentials')) {
+          setError('Email ou senha incorretos. Verifique suas credenciais e tente novamente.');
+          toast({
+            title: "Credenciais inválidas",
+            description: "Email ou senha incorretos. Verifique suas credenciais e tente novamente.",
+            variant: "destructive",
+          });
+        } else {
+          setError(`Erro no login: ${error.message}`);
+          toast({
+            title: "Erro no login",
+            description: error.message || "Ocorreu um erro durante o login",
+            variant: "destructive",
+          });
+        }
       } else {
-        toast({
-          title: "Login bem-sucedido",
-          description: "Bem-vindo ao painel administrativo!",
-        });
-        navigate('/admin');
+        // Verificar se o usuário é um administrador
+        const isAdmin = await checkAdminStatus();
+        
+        if (isAdmin) {
+          toast({
+            title: "Login bem-sucedido",
+            description: "Bem-vindo ao painel administrativo!",
+            variant: "success",
+          });
+          navigate('/admin');
+        } else {
+          toast({
+            title: "Acesso negado",
+            description: "Você não tem permissões de administrador.",
+            variant: "destructive",
+          });
+          
+          // Fazer logout já que não é um administrador
+          await signIn(email, password);
+          setError("Você não tem permissões de administrador.");
+        }
       }
     } catch (err) {
       console.error('Error during admin login:', err);
