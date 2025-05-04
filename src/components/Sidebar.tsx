@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, ListChecks, Google, Settings } from 'lucide-react';
+import { Home, ListChecks, Globe, Settings } from 'lucide-react';
 
 interface SidebarProps {
   activePage: 'dashboard' | 'waiters' | 'google' | 'reviews';
@@ -46,7 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
                 }`}
                 onClick={() => onNavigate('google')}
               >
-                <Google className="mr-2 h-4 w-4" />
+                <Globe className="mr-2 h-4 w-4" />
                 Google
               </Link>
             </li>

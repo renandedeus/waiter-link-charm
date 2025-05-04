@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { Review } from '@/types';
 import { ReviewsList } from '@/components/ReviewsList';
-import { AIReviewResponse } from '@/components/AIReviewResponse';
+import AIReviewResponse from '@/components/AIReviewResponse';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,13 @@ const ReviewsManagement = () => {
       
       if (error) throw error;
       
-      setReviews(data || []);
+      // Add date field to match Review type if it's missing
+      const reviewsWithDate = (data || []).map(review => ({
+        ...review,
+        date: review.date || review.created_at
+      }));
+      
+      setReviews(reviewsWithDate);
       
     } catch (error) {
       console.error("Erro ao buscar avaliações:", error);

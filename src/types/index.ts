@@ -1,4 +1,3 @@
-
 export interface Waiter {
   id: string;
   restaurant_id: string;
@@ -41,14 +40,15 @@ export interface Restaurant {
 export interface Review {
   id: string;
   restaurant_id: string;
-  waiter_id?: string;
-  content: string;
-  rating: number;
-  date: string;
   author?: string;
-  translated?: boolean;
-  translatedContent?: string;
+  rating: number;
+  content?: string;
+  date: string;
   created_at: string;
+  waiter_id?: string;
+  translated?: boolean;
+  translated_content?: string;
+  response?: string; // Add response property to Review interface
 }
 
 export interface LeaderboardEntry {

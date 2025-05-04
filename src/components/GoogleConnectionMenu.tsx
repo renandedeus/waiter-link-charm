@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, Search } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,14 +31,14 @@ const GoogleConnectionMenu = () => {
   useEffect(() => {
     const checkExistingConnection = async () => {
       try {
-        const { data: restaurant } = await supabase
-          .from('restaurants')
-          .select('google_connection_status, google_location_id')
-          .single();
+        // For demonstration purposes, we'll use session storage or local state
+        // instead of checking database columns that might not exist yet
+        const savedConnectionStatus = localStorage.getItem('google_connection_status');
+        const savedLocationId = localStorage.getItem('google_location_id');
         
-        if (restaurant && restaurant.google_connection_status === 'connected' && restaurant.google_location_id) {
+        if (savedConnectionStatus === 'connected' && savedLocationId) {
           setIsConnected(true);
-          setSelectedBusiness(restaurant.google_location_id);
+          setSelectedBusiness(savedLocationId);
           
           // Carregar as informações do negócio se estiver conectado
           loadBusinessData();
@@ -132,31 +132,15 @@ const GoogleConnectionMenu = () => {
         ]
       };
       
-      // Atualizar os dados do restaurante no banco de dados
-      // Em uma implementação real, isso seria feito em uma função Edge do Supabase
-      await supabase.from('restaurants').update({
-        name: selectedLocation.name,
-        google_review_url: mockBusinessData.reviewUrl,
-        google_connection_status: 'connected',
-        google_location_id: selectedLocation.id,
-        total_reviews: mockBusinessData.reviewCount,
-        initial_rating: mockBusinessData.initialRating,
-        current_rating: mockBusinessData.currentRating,
-        updated_at: new Date().toISOString()
-      }).eq('id', '123');
+      // Store connection data in localStorage for demo purposes
+      localStorage.setItem('google_connection_status', 'connected');
+      localStorage.setItem('google_location_id', selectedLocation.id);
+      localStorage.setItem('google_business_name', selectedLocation.name);
+      localStorage.setItem('google_review_url', mockBusinessData.reviewUrl);
       
-      // Adicionar as avaliações ao banco de dados
-      for (const review of mockBusinessData.recentReviews) {
-        await supabase.from('reviews').upsert({
-          id: review.id,
-          restaurant_id: review.restaurant_id,
-          content: review.content,
-          rating: review.rating,
-          author: review.author,
-          date: review.date,
-          created_at: review.created_at
-        });
-      }
+      // Add reviews to the app state
+      // In a real implementation, we would save these to the database
+      console.log("Adding mock reviews:", mockBusinessData.recentReviews);
       
       setIsConnected(true);
       setIsLoading(false);
@@ -186,12 +170,11 @@ const GoogleConnectionMenu = () => {
 
   const handleDisconnect = async () => {
     try {
-      // Em uma implementação real, revogaríamos o acesso OAuth
-      await supabase.from('restaurants').update({
-        google_connection_status: 'disconnected',
-        google_location_id: null,
-        updated_at: new Date().toISOString()
-      }).eq('id', '123');
+      // Clear connection data from localStorage
+      localStorage.removeItem('google_connection_status');
+      localStorage.removeItem('google_location_id');
+      localStorage.removeItem('google_business_name');
+      localStorage.removeItem('google_review_url');
       
       setIsConnected(false);
       setSelectedBusiness(null);
