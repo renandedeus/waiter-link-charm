@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import TestCredentials from '@/components/TestCredentials';
 
 const Index = () => {
   const [email, setEmail] = useState('');
@@ -92,6 +93,8 @@ const Index = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
+        console.error("Login error details:", error);
+        
         if (error.message.includes('Email not confirmed')) {
           setInfoMessage('Por favor, confirme seu email antes de fazer login ou cadastre-se novamente.');
           toast({
@@ -100,7 +103,7 @@ const Index = () => {
             variant: "warning",
           });
         } else {
-          setError(error.message || 'Erro ao fazer login');
+          setError(`Erro ao fazer login: ${error.message}` || 'Credenciais inválidas');
           toast({
             title: "Falha no login",
             description: error.message || 'Credenciais inválidas',
@@ -216,8 +219,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-8">
+      <div className="w-full max-w-md px-4 mb-8">
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Target Avaliações</CardTitle>
@@ -264,6 +267,13 @@ const Index = () => {
                   <Alert variant="info" className="mb-4">
                     <InfoIcon className="h-4 w-4" />
                     <AlertDescription>{infoMessage}</AlertDescription>
+                  </Alert>
+                )}
+                
+                {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <InfoIcon className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
                 
@@ -378,6 +388,11 @@ const Index = () => {
             </p>
           </CardFooter>
         </Card>
+      </div>
+      
+      {/* Adicionando o componente de credenciais de teste */}
+      <div className="w-full max-w-md px-4">
+        <TestCredentials />
       </div>
     </div>
   );

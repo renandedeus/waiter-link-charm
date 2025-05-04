@@ -20,7 +20,7 @@ const TestCredentials = () => {
             Administrador (Dono do App)
           </div>
           <div className="pl-6 text-sm">
-            <div><strong>Email:</strong> admin@waiterlink.com</div>
+            <div><strong>Email:</strong> admin@targetavaliacoes.com</div>
             <div><strong>Senha:</strong> admin123</div>
           </div>
         </div>
@@ -32,7 +32,7 @@ const TestCredentials = () => {
           </div>
           <div className="pl-6 text-sm">
             <div><strong>Email:</strong> restaurante@teste.com</div>
-            <div><strong>Senha:</strong> senha123</div>
+            <div><strong>Senha:</strong> teste123</div>
           </div>
         </div>
         
@@ -54,6 +54,3 @@ const TestCredentials = () => {
 };
 
 export default TestCredentials;
-
-// Nota: Para criar os usuários reais, é necessário registrá-los através da interface de registro
-// ou através do painel administrativo do Supabase.
