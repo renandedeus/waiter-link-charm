@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -84,10 +83,8 @@ export const useGoogleConnection = (
   useEffect(() => {
     if (typeof window !== 'undefined' && window.google && !isConnected) {
       try {
-        // Use the updated client ID that's properly configured in Google Cloud Console
         window.google.accounts.id.initialize({
-          // Use a client ID that's properly configured in Google Cloud Console
-          client_id: "756239846791-b9stmenfmnkanlk7ik614ockbpbt9t58.apps.googleusercontent.com",
+          client_id: "YOUR_CLIENT_ID_FROM_GOOGLE_CLOUD_CONSOLE.apps.googleusercontent.com",
           callback: handleGoogleCallback,
           auto_select: false,
           context: 'use'
@@ -100,18 +97,14 @@ export const useGoogleConnection = (
 
   const handleGoogleCallback = async (response: any) => {
     try {
-      // Process the credential
       const credential = response.credential;
       const payload = parseJwt(credential);
       
       console.log("Successfully authenticated with Google:", payload.email);
       
-      // For real implementation, you would send this token to your backend
       setIsConnecting(true);
       
-      // Simulate API call to get business locations
       setTimeout(() => {
-        // Save connection info
         localStorage.setItem('google_connection_status', 'connected');
         localStorage.setItem('google_account_email', payload.email);
         
@@ -142,7 +135,6 @@ export const useGoogleConnection = (
       window.google.accounts.id.prompt((notification: any) => {
         console.log("Google prompt notification:", notification);
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // Try manual OAuth flow if One Tap doesn't work
           handleManualConnect();
         } else {
           setIsConnecting(false);
@@ -156,19 +148,15 @@ export const useGoogleConnection = (
   const handleManualConnect = () => {
     setIsConnecting(true);
     
-    // Initialize OAuth client
     if (window.google && window.google.accounts.oauth2) {
       const client = window.google.accounts.oauth2.initCodeClient({
-        // Use the updated client ID that's properly configured in Google Cloud Console
-        client_id: "756239846791-b9stmenfmnkanlk7ik614ockbpbt9t58.apps.googleusercontent.com",
+        client_id: "YOUR_CLIENT_ID_FROM_GOOGLE_CLOUD_CONSOLE.apps.googleusercontent.com",
         scope: "email profile https://www.googleapis.com/auth/business.manage",
         ux_mode: 'popup',
         callback: (response: any) => {
           if (response.code) {
-            // Here you would exchange the code for tokens on your backend
             console.log("Authorization code received:", response.code);
             
-            // Mock success for now
             const mockEmail = "usuario@gmail.com";
             localStorage.setItem('google_connection_status', 'connected');
             localStorage.setItem('google_account_email', mockEmail);
@@ -200,7 +188,6 @@ export const useGoogleConnection = (
 
   const handleDisconnect = async () => {
     try {
-      // Clear connection data from localStorage
       localStorage.removeItem('google_connection_status');
       localStorage.removeItem('google_account_email');
       localStorage.removeItem('google_location_name');
@@ -214,7 +201,6 @@ export const useGoogleConnection = (
         title: "Conta Google desconectada",
         description: "Sua conta Google foi desconectada."
       });
-      
     } catch (error) {
       console.error("Erro ao desconectar:", error);
       toast({
@@ -226,15 +212,12 @@ export const useGoogleConnection = (
   };
   
   const handleSaveLocation = () => {
-    // Save the location info
     if (locationName) {
       localStorage.setItem('google_location_name', locationName);
       
-      // Update the restaurant info
       const updatedRestaurant = {
         ...restaurant,
         name: locationName,
-        // In a real implementation, we would pull these from the Google API
         googleReviewUrl: "https://g.page/r/review-link-for-" + locationName.replace(/\s+/g, '-').toLowerCase(),
         google_review_url: "https://g.page/r/review-link-for-" + locationName.replace(/\s+/g, '-').toLowerCase(),
       };
