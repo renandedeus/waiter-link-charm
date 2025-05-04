@@ -98,7 +98,9 @@ const App = () => {
               {/* Public routes */}
               <Route path="/" element={<AuthRedirect element={<Index />} whenAuthenticated="/dashboard" whenAdmin="/admin" />} />
               <Route path="/r/:id" element={<Navigate to="/" />} />
-              <Route path="/payment-gateway" element={<PaymentGateway />} />
+              
+              {/* Payment route - only accessible when logged in */}
+              <Route path="/payment-gateway" element={<ProtectedRoute element={<PaymentGateway />} />} />
               
               {/* Client routes */}
               <Route path="/dashboard" element={<ClientRoute element={<Dashboard />} />} />

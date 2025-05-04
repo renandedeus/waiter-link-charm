@@ -24,8 +24,6 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true,
       flowType: 'implicit',
       storage: localStorage,
-      // Set the site URL dynamically for redirects
-      redirectTo: getSiteURL()
     }
   }
 );

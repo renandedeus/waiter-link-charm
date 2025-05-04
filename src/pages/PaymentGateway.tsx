@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StripePaymentForm from '@/components/StripePaymentForm';
+import { useAuth } from '@/contexts/auth';
 
 interface PaymentResponse {
   clientSecret: string;
@@ -22,6 +23,7 @@ const PaymentGateway = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('mensal');
@@ -29,6 +31,24 @@ const PaymentGateway = () => {
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const canceled = searchParams.get('canceled') === 'true';
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      
+      if (!data.user) {
+        toast({
+          title: "Não autenticado",
+          description: "Você precisa estar logado para acessar esta página",
+          variant: "destructive",
+        });
+        navigate('/');
+      }
+    };
+    
+    checkUser();
+  }, [navigate, toast]);
 
   useEffect(() => {
     if (canceled) {
@@ -101,7 +121,7 @@ const PaymentGateway = () => {
     setIsSuccess(true);
     toast({
       title: "Pagamento bem-sucedido",
-      description: "Seu pagamento foi processado com sucesso!",
+      description: "Seu acesso foi liberado! Você será redirecionado para o dashboard.",
       variant: "default",
     });
     
@@ -152,9 +172,9 @@ const PaymentGateway = () => {
       <div className="w-full max-w-4xl">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-center">Configuração de Pagamento</CardTitle>
+            <CardTitle className="text-xl font-bold text-center">Selecione seu plano</CardTitle>
             <CardDescription className="text-center">
-              Escolha seu plano e configure seu pagamento
+              Escolha o plano que melhor atende às suas necessidades
             </CardDescription>
           </CardHeader>
           
@@ -164,9 +184,9 @@ const PaymentGateway = () => {
                 <div className="flex justify-center">
                   <CheckCircle className="h-16 w-16 text-green-500" />
                 </div>
-                <h3 className="text-xl font-medium">Pagamento Configurado!</h3>
+                <h3 className="text-xl font-medium">Pagamento Concluído!</h3>
                 <p className="text-gray-600">
-                  Seu método de pagamento foi configurado com sucesso.
+                  Seu acesso ao sistema foi liberado com sucesso.
                 </p>
                 <p className="text-sm text-gray-500">
                   Você será redirecionado para o dashboard automaticamente...
@@ -246,7 +266,7 @@ const PaymentGateway = () => {
                       <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-blue-800">
-                          <strong>Importante:</strong> Ao prosseguir, você será solicitado a fornecer seus dados de pagamento de forma segura.
+                          <strong>Importante:</strong> O acesso ao sistema será liberado imediatamente após a confirmação do pagamento.
                         </p>
                       </div>
                     </div>

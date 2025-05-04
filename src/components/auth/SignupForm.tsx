@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { InfoIcon } from 'lucide-react';
+import { AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -101,10 +100,10 @@ const SignupForm = ({
             // Login successful
             toast({
               title: "Login realizado com sucesso",
-              description: "Você será redirecionado para o dashboard",
+              description: "Você será redirecionado para escolher um plano",
               variant: "success",
             });
-            navigate('/dashboard');
+            navigate('/payment-gateway');
           }
         }
       } else if (data?.user) {
@@ -119,12 +118,12 @@ const SignupForm = ({
         } else {
           toast({
             title: "Cadastro realizado com sucesso!",
-            description: "Você tem 14 dias gratuitos. Você será redirecionado para configurar seu método de pagamento.",
+            description: "Você será redirecionado para escolher seu plano.",
             variant: "success",
           });
           
-          // Iniciar contagem regressiva para redirecionamento
-          setShowPaymentRedirect(true);
+          // Redirect directly to payment page
+          navigate('/payment-gateway');
         }
       }
     } catch (err) {
@@ -142,13 +141,6 @@ const SignupForm = ({
 
   return (
     <form onSubmit={handleSignUp} className="space-y-4">
-      <Alert className="bg-green-50 border-green-300 mb-4">
-        <InfoIcon className="h-4 w-4 text-green-500" />
-        <AlertDescription className="text-green-700">
-          Experimente grátis por <strong>14 dias</strong>! Cadastre-se agora.
-        </AlertDescription>
-      </Alert>
-      
       <div className="space-y-2">
         <Label htmlFor="signup-name">Nome</Label>
         <Input 
@@ -190,12 +182,12 @@ const SignupForm = ({
         type="submit"
         disabled={isLoading}
       >
-        {isLoading ? "Criando conta..." : "Criar Conta e Ativar 14 Dias Grátis"}
+        {isLoading ? "Criando conta..." : "Criar Conta"}
       </Button>
       
       <p className="text-xs text-center text-gray-500 mt-2">
         Ao criar uma conta, você concorda com os nossos termos e condições.
-        Após o período de teste, será cobrada uma assinatura mensal de R$49,90.
+        Será cobrada uma assinatura mensal de R$49,90 após a confirmação do pagamento.
       </p>
     </form>
   );
