@@ -4,21 +4,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckCircle, CreditCard, Info } from 'lucide-react';
+import { CheckCircle, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const PaymentGateway = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardholderName, setCardholderName] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('mensal');
@@ -39,17 +32,25 @@ const PaymentGateway = () => {
     setIsProcessing(true);
     
     try {
+      console.log('Iniciando checkout para plano:', planType);
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { planType }
       });
       
       if (error) {
+        console.error('Erro na invocação da função:', error);
         throw new Error(error.message || 'Erro ao processar pagamento');
       }
       
+      console.log('Resposta da função create-subscription:', data);
+      
       if (data?.url) {
         setIsRedirecting(true);
-        window.location.href = data.url;
+        console.log('Redirecionando para URL:', data.url);
+        // Pequeno delay antes do redirecionamento para garantir que o estado seja atualizado
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 500);
       } else {
         throw new Error('Não foi possível obter o link de pagamento');
       }
@@ -61,70 +62,8 @@ const PaymentGateway = () => {
         variant: "destructive",
       });
       setIsProcessing(false);
+      setIsRedirecting(false);
     }
-  };
-
-  const handleLegacySubmit = (e) => {
-    e.preventDefault();
-    
-    // Validação básica
-    if (!cardNumber || !cardholderName || !expiryDate || !cvv) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos do cartão",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Simulação de processamento de pagamento
-    setIsProcessing(true);
-    
-    // Simulando uma chamada de API
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsSuccess(true);
-      
-      toast({
-        title: "Cartão configurado com sucesso!",
-        description: "Seu método de pagamento foi configurado para quando o período gratuito terminar.",
-        variant: "success",
-      });
-      
-      // Redirecionamento para o dashboard após sucesso
-      setTimeout(() => {
-        navigate('/dashboard?payment_success=true');
-      }, 2000);
-    }, 2000);
-  };
-  
-  // Formatação do número do cartão
-  const formatCardNumber = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-    
-    for (let i = 0; i < match.length; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return value;
-    }
-  };
-  
-  // Formatação da data de expiração
-  const formatExpiryDate = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    
-    if (v.length >= 2) {
-      return v.slice(0, 2) + (v.length > 2 ? '/' + v.slice(2, 4) : '');
-    }
-    
-    return v;
   };
 
   const planDetails = [
