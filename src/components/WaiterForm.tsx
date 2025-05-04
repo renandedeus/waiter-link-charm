@@ -58,6 +58,7 @@ export const WaiterForm = ({ onSave }: WaiterFormProps) => {
     }
     
     setIsLoading(true);
+    setErrors({});
     
     try {
       const createdWaiter = await onSave(name, email, whatsapp);
@@ -75,7 +76,6 @@ export const WaiterForm = ({ onSave }: WaiterFormProps) => {
         setName('');
         setEmail('');
         setWhatsapp('');
-        setErrors({});
       }
     } catch (error) {
       console.error('Error saving waiter:', error);
