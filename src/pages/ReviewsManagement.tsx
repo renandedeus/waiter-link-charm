@@ -37,7 +37,8 @@ const ReviewsManagement = () => {
       // Add date field to match Review type if it's missing
       const reviewsWithDate = (data || []).map(review => ({
         ...review,
-        date: review.date || review.created_at
+        date: review.date || review.created_at,
+        translatedContent: review.translated_content // Add camelCase version for compatibility
       }));
       
       setReviews(reviewsWithDate);
@@ -86,7 +87,7 @@ const ReviewsManagement = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar 
         activePage={'reviews'} 
-        onNavigate={() => {}} 
+        onNavigate={(page) => console.log(page)} 
       />
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto p-4 md:p-6 space-y-6">

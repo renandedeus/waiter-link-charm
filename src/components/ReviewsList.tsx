@@ -97,10 +97,10 @@ export const ReviewsList = ({ reviews, onReviewTranslated }: ReviewsListProps) =
           <CardContent className="space-y-4">
             <p className="text-sm">{review.content}</p>
             
-            {review.translated && review.translatedContent && (
+            {review.translated && review.translated_content && (
               <div className="bg-gray-50 p-3 rounded-md">
                 <p className="text-sm text-gray-600 mb-1 font-medium">Tradução:</p>
-                <p className="text-sm">{review.translatedContent}</p>
+                <p className="text-sm">{review.translated_content}</p>
               </div>
             )}
             

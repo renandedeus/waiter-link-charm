@@ -43,12 +43,13 @@ export interface Review {
   author?: string;
   rating: number;
   content?: string;
-  date: string;
+  date: string;  // Added this field
   created_at: string;
   waiter_id?: string;
   translated?: boolean;
-  translated_content?: string;
-  response?: string; // Add response property to Review interface
+  translated_content?: string;  // Using snake_case to match database
+  translatedContent?: string;   // Adding camelCase for component usage
+  response?: string;
 }
 
 export interface LeaderboardEntry {

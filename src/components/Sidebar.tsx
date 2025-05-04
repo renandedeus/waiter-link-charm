@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, ListChecks, Globe, Settings } from 'lucide-react';
+import { Home, ListChecks, Globe, Settings, MessageSquare } from 'lucide-react';
 
 interface SidebarProps {
   activePage: 'dashboard' | 'waiters' | 'google' | 'reviews';
@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
                 }`}
                 onClick={() => onNavigate('reviews')}
               >
-                <ListChecks className="mr-2 h-4 w-4" />
+                <MessageSquare className="mr-2 h-4 w-4" />
                 Avaliações
               </Link>
             </li>
