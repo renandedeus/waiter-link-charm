@@ -100,23 +100,17 @@ const SignupForm = ({
             });
           } else {
             // Login bem-sucedido, registre este acesso
-            try {
-              await logAccess('login_existing_user');
-              
-              // Redirecionar para o processo de escolha de plano
-              toast({
-                title: "Login realizado com sucesso",
-                description: "Você será redirecionado para escolher um plano",
-                variant: "success",
-              });
-              
-              // Redirecionamento direto para a página de pagamento
-              setTimeout(() => {
-                navigate('/payment-gateway');
-              }, 1500);
-            } catch (logError) {
-              console.error("Erro ao registrar acesso:", logError);
-            }
+            await logAccess('login_existing_user');
+            
+            // Redirecionar diretamente para o processo de escolha de plano
+            toast({
+              title: "Login realizado com sucesso",
+              description: "Você será redirecionado para escolher um plano",
+              variant: "success",
+            });
+            
+            // Mostrar o componente PaymentRedirect em vez de redirecionar
+            setShowPaymentRedirect(true);
           }
         }
       } else if (data?.user) {
@@ -142,7 +136,7 @@ const SignupForm = ({
             variant: "success",
           });
           
-          // Iniciar contagem regressiva para redirecionamento
+          // Mostrar o componente PaymentRedirect imediatamente
           setShowPaymentRedirect(true);
         }
       }

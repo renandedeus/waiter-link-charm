@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +38,14 @@ const PaymentGateway = () => {
       if (user) {
         await logAccess('payment_page_view', user.id);
         console.log("Página de pagamento visualizada pelo usuário:", user.email);
+      } else {
+        console.log("Página de pagamento visualizada por usuário não autenticado");
+        toast({
+          title: "Não autenticado",
+          description: "Você precisa fazer login para acessar esta página",
+          variant: "destructive",
+        });
+        navigate('/');
       }
     };
     
@@ -51,7 +58,7 @@ const PaymentGateway = () => {
         variant: "destructive",
       });
     }
-  }, [canceled, toast, user]);
+  }, [canceled, toast, user, navigate]);
 
   const handleCreatePaymentIntent = async (planType: string) => {
     setIsProcessing(true);
@@ -64,7 +71,13 @@ const PaymentGateway = () => {
       
       if (!session?.data.session) {
         console.error("Sessão não encontrada. Usuário não está autenticado.");
-        throw new Error("Sessão de usuário não encontrada. Faça login novamente.");
+        toast({
+          title: "Sessão expirada",
+          description: "Sua sessão expirou. Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
       }
       
       // Log do acesso para fins de auditoria
@@ -149,25 +162,6 @@ const PaymentGateway = () => {
     }, 2000);
   };
 
-  const handleCancel = () => {
-    setPaymentResponse(null);
-    setActiveTab('select-plan');
-    
-    // Registrar o cancelamento
-    const logCancel = async () => {
-      if (user) {
-        await logAccess('payment_canceled', user.id);
-      }
-    };
-    
-    logCancel();
-  };
-
-  const handleRetry = () => {
-    setError(null);
-    // Para casos em que quisermos tentar novamente sem mudar o plano
-  };
-
   const planDetails = [
     {
       id: 'mensal',
@@ -194,7 +188,7 @@ const PaymentGateway = () => {
       recommended: true
     }
   ];
-
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-4xl">
@@ -247,7 +241,7 @@ const PaymentGateway = () => {
                             variant="outline" 
                             size="sm" 
                             className="mt-2 text-xs" 
-                            onClick={handleRetry}
+                            onClick={() => setError(null)}
                           >
                             Tentar novamente
                           </Button>
@@ -264,28 +258,58 @@ const PaymentGateway = () => {
                       onValueChange={setSelectedPlan} 
                       className="grid gap-4 grid-cols-1 md:grid-cols-3"
                     >
-                      {planDetails.map(plan => (
-                        <div key={plan.id} className={`relative rounded-lg border p-4 ${plan.recommended ? 'ring-2 ring-primary' : ''}`}>
-                          {plan.recommended && (
-                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
-                              Mais popular
-                            </div>
-                          )}
-                          <RadioGroupItem 
-                            value={plan.id} 
-                            id={plan.id}
-                            className="absolute right-4 top-4"
-                          />
-                          <div className="mb-2">
-                            <h4 className="font-medium">{plan.name}</h4>
-                            <div className="mt-1">
-                              <span className="text-2xl font-bold">{plan.price}</span>
-                              <span className="text-gray-500 text-sm"> {plan.billingCycle}</span>
-                            </div>
+                      <div className={`relative rounded-lg border p-4 ${selectedPlan === 'mensal' ? 'ring-2 ring-primary' : ''}`}>
+                        {selectedPlan === 'mensal' && (
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
+                            Recomendado
                           </div>
-                          <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
+                        )}
+                        <RadioGroupItem 
+                          value="mensal" 
+                          id="mensal"
+                          className="absolute right-4 top-4"
+                        />
+                        <div className="mb-2">
+                          <h4 className="font-medium">Plano Mensal</h4>
+                          <div className="mt-1">
+                            <span className="text-2xl font-bold">R$ 49,90</span>
+                            <span className="text-gray-500 text-sm"> por mês</span>
+                          </div>
                         </div>
-                      ))}
+                        <p className="text-sm text-gray-600 mt-2">Pagamento mensal recorrente</p>
+                      </div>
+                      
+                      <div className={`relative rounded-lg border p-4 ${selectedPlan === 'trimestral' ? 'ring-2 ring-primary' : ''}`}>
+                        <RadioGroupItem 
+                          value="trimestral" 
+                          id="trimestral"
+                          className="absolute right-4 top-4"
+                        />
+                        <div className="mb-2">
+                          <h4 className="font-medium">Plano Trimestral</h4>
+                          <div className="mt-1">
+                            <span className="text-2xl font-bold">R$ 39,90</span>
+                            <span className="text-gray-500 text-sm"> por mês</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">Total: R$ 119,70 a cada 3 meses</p>
+                      </div>
+                      
+                      <div className={`relative rounded-lg border p-4 ${selectedPlan === 'anual' ? 'ring-2 ring-primary' : ''}`}>
+                        <RadioGroupItem 
+                          value="anual" 
+                          id="anual"
+                          className="absolute right-4 top-4"
+                        />
+                        <div className="mb-2">
+                          <h4 className="font-medium">Plano Anual</h4>
+                          <div className="mt-1">
+                            <span className="text-2xl font-bold">R$ 29,90</span>
+                            <span className="text-gray-500 text-sm"> por mês</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">Total: R$ 358,80 por ano (economia de 40%)</p>
+                      </div>
                     </RadioGroup>
                   </div>
                   
@@ -360,7 +384,10 @@ const PaymentGateway = () => {
                         planType={selectedPlan}
                         priceId={paymentResponse.priceId}
                         onPaymentSuccess={handlePaymentSuccess}
-                        onCancel={handleCancel}
+                        onCancel={() => {
+                          setActiveTab('select-plan');
+                          setPaymentResponse(null);
+                        }}
                       />
                     )}
                   </div>

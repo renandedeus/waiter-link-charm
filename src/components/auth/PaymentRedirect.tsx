@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { InfoIcon } from 'lucide-react';
+import { InfoIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { logAccess } from '@/contexts/auth/utils';
 import { useAuth } from '@/contexts/auth';
@@ -26,6 +26,7 @@ const PaymentRedirect = () => {
       // Registrar o evento de redirecionamento para pagamento
       const logRedirect = async () => {
         try {
+          console.log("Redirecionando para pagamento, user:", user?.email);
           await logAccess('payment_redirect', user?.id);
         } catch (err) {
           console.error('Erro ao registrar redirecionamento de pagamento:', err);
@@ -39,8 +40,11 @@ const PaymentRedirect = () => {
         description: "Configurando seu método de pagamento para quando o período gratuito terminar.",
       });
       
-      // Redirecionar para a página de pagamento
-      navigate("/payment-gateway");
+      // Redirecionar para a página de pagamento com um pequeno delay para garantir que o toast seja exibido
+      setTimeout(() => {
+        console.log("Navegando para /payment-gateway");
+        navigate("/payment-gateway");
+      }, 500);
     }
   }, [paymentCountdown, navigate, toast, user]);
 
@@ -58,6 +62,7 @@ const PaymentRedirect = () => {
           Para garantir acesso contínuo após o período de teste, configuraremos seu método de pagamento agora.
           Você só será cobrado após os 14 dias gratuitos.
         </div>
+        <Loader2 className="h-8 w-8 animate-spin mx-auto my-3 text-primary" />
         <div className="text-lg font-medium mt-4">Redirecionando em {paymentCountdown}s</div>
       </div>
       <div className="bg-gray-100 rounded-lg p-4">

@@ -8,7 +8,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 // Get the current site URL dynamically instead of hardcoding localhost
 const getSiteURL = () => {
-  return window.location.origin || 'https://fgpsfqjellkukgnqhmdh.supabase.co';
+  return window.location.origin;
 };
 
 // Import the supabase client like this:
@@ -22,7 +22,6 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'implicit',
       storage: localStorage
     }
   }
