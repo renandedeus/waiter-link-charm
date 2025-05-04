@@ -74,7 +74,7 @@ const GoogleConnectionMenu = () => {
       <CardFooter>
         {isConnected ? <Button variant="outline" onClick={handleDisconnect}>
             Desconectar conta
-          </Button> : <Button onClick={handleConnect} disabled={isConnecting} className="A conex\xE3o do google deve pedir qual e-mail eu vou conectar com google. Depois deve aparecer a lista de empresas relacionadas \xE0 este e-mail e em uma caixa de sele\xE7\xE3o eu poder selecionar qual empresa ser\xE1 vinculada ao sistema.\n\nA partir da\xED o sistema poder\xE1 puxar informa\xE7\xF5es sobre a empresa como:\n\n1. link de avalia\xE7\xE3o\n2. Avalia\xE7\xF5es feitas pelos usu\xE1rios\n3. Nota Inicial, nota Atual e o aumento que teve \n4. E demais informa\xE7\xF5es que o sistema j\xE1 tem devem ser alimentadas por essa conex\xE3o. \n5. Tamb\xE9m quero que o sistema tenha um menu de avalia\xE7\xF5es separado e a possibilidade de responder as usando inteligencia artificial (uma LLM) para as respostas.  ">
+          </Button> : <Button onClick={handleConnect} disabled={isConnecting} className="">
             {isConnecting ? "Conectando..." : "Conectar conta Google"}
           </Button>}
       </CardFooter>
