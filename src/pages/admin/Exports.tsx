@@ -57,14 +57,22 @@ const Exports = () => {
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name')
+        .select('id, name, google_review_url')
         .order('name', { ascending: true });
 
       if (error) throw error;
-      setRestaurants(data);
       
-      if (data.length > 0) {
-        setSelectedRestaurant(data[0].id);
+      // Map database fields to our frontend types
+      const mappedRestaurants: Restaurant[] = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        googleReviewUrl: item.google_review_url || ''
+      }));
+      
+      setRestaurants(mappedRestaurants);
+      
+      if (mappedRestaurants.length > 0) {
+        setSelectedRestaurant(mappedRestaurants[0].id);
       }
     } catch (error) {
       console.error('Error fetching restaurants:', error);

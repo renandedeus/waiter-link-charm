@@ -112,7 +112,7 @@ export const Leaderboard = () => {
                 {champions.map((champion, index) => (
                   <TableRow key={index}>
                     <TableCell>{champion.month} {champion.year}</TableCell>
-                    <TableCell>{champion.waiterName || champion.waiter_name}</TableCell>
+                    <TableCell>{champion.waiter_name}</TableCell>
                     <TableCell className="text-right">{champion.clicks}</TableCell>
                   </TableRow>
                 ))}

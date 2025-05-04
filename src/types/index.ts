@@ -1,3 +1,4 @@
+
 export interface Waiter {
   id: string;
   restaurant_id: string;
@@ -34,6 +35,7 @@ export interface Restaurant {
   updated_at?: string;
   recentReviews?: Review[];
   waiter_count?: number; // computed field
+  google_review_url?: string; // added for compatibility with database fields
 }
 
 export interface Review {

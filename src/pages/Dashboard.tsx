@@ -57,7 +57,7 @@ const Dashboard = () => {
     const updatedRestaurant = await setRestaurantInfo(name, googleReviewUrl);
     setRestaurant({
       ...updatedRestaurant,
-      googleReviewUrl: updatedRestaurant.google_review_url
+      googleReviewUrl: updatedRestaurant.google_review_url || googleReviewUrl
     });
   };
   
