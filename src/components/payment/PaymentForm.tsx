@@ -1,17 +1,10 @@
 
 import { useEffect, useState } from 'react';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import { Button } from './ui/button';
-import { Alert, AlertDescription } from './ui/alert';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logAccess } from '@/contexts/auth/utils';
-
-// Initialize Stripe with the public key directly
-// This key is hardcoded to ensure it's always available
-const stripePublicKey = 'pk_live_51QsRHwQ1OA5iIhkTsFOcfyvuSOLO47x407njqPNpBH2NvJcm8fGzDqeu0c9dnusvYVOdGL41N0plEMMhdznuwjKn00Im4e51uk';
-const stripePromise = loadStripe(stripePublicKey);
+import PaymentFormStatus from './PaymentFormStatus';
+import PaymentFormActions from './PaymentFormActions';
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -213,123 +206,17 @@ const PaymentForm = ({
         }
       }} />
       
-      {message && (
-        <Alert variant={isSuccess ? "default" : "destructive"} className={isSuccess ? "bg-green-50 border-green-200" : ""}>
-          <AlertDescription className="flex items-center gap-2">
-            {isSuccess ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            ) : (
-              <XCircle className="h-5 w-5" />
-            )}
-            {message}
-          </AlertDescription>
-        </Alert>
-      )}
+      <PaymentFormStatus message={message} isSuccess={isSuccess} />
       
-      <div className="flex flex-col gap-3">
-        <Button 
-          type="submit" 
-          disabled={!stripe || !elements || isLoading || isSuccess}
-          className="w-full"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processando...
-            </>
-          ) : isSuccess ? (
-            <>
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Pagamento Aprovado
-            </>
-          ) : (
-            `Pagar ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount / 100)}`
-          )}
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isLoading || isSuccess}
-        >
-          Voltar
-        </Button>
-      </div>
-      
-      <p className="text-xs text-center text-gray-500 mt-4">
-        Seus dados de pagamento são processados com segurança pelo Stripe.
-      </p>
+      <PaymentFormActions 
+        isLoading={isLoading}
+        isSuccess={isSuccess}
+        amount={amount}
+        onCancel={onCancel}
+        isStripeReady={Boolean(stripe && elements)}
+      />
     </form>
   );
 };
 
-interface StripePaymentFormProps {
-  clientSecret: string | null;
-  paymentType: 'payment' | 'subscription';
-  amount: number;
-  planType: string;
-  priceId?: string;
-  onPaymentSuccess: () => void;
-  onCancel: () => void;
-}
-
-const StripePaymentForm = ({
-  clientSecret,
-  paymentType,
-  amount,
-  planType,
-  priceId,
-  onPaymentSuccess,
-  onCancel
-}: StripePaymentFormProps) => {
-  if (!stripePromise) {
-    return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertDescription className="flex items-center gap-2">
-          <XCircle className="h-5 w-5" />
-          Erro de configuração: Chave pública do Stripe não encontrada.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (!clientSecret) {
-    return (
-      <div className="flex justify-center items-center py-10">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return (
-    <Elements stripe={stripePromise} options={{ 
-      clientSecret, 
-      locale: 'pt-BR',
-      appearance: {
-        theme: 'stripe',
-        variables: {
-          colorPrimary: '#10b981',
-          colorBackground: '#ffffff',
-          colorText: '#1f2937',
-          colorDanger: '#ef4444',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          spacingUnit: '4px',
-          borderRadius: '4px'
-        }
-      }
-    }}>
-      <PaymentForm 
-        clientSecret={clientSecret}
-        paymentType={paymentType}
-        amount={amount}
-        planType={planType}
-        priceId={priceId}
-        onPaymentSuccess={onPaymentSuccess}
-        onCancel={onCancel}
-      />
-    </Elements>
-  );
-};
-
-export default StripePaymentForm;
+export default PaymentForm;
