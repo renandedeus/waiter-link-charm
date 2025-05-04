@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import PaymentGateway from "./pages/PaymentGateway";
 import Admin from "./pages/admin/Index";
 import AdminLogin from "./pages/admin/Login";
 import AdminRestaurants from "./pages/admin/Restaurants";
@@ -97,6 +98,7 @@ const App = () => {
               {/* Public routes */}
               <Route path="/" element={<AuthRedirect element={<Index />} whenAuthenticated="/dashboard" whenAdmin="/admin" />} />
               <Route path="/r/:id" element={<Navigate to="/" />} />
+              <Route path="/payment-gateway" element={<PaymentGateway />} />
               
               {/* Client routes */}
               <Route path="/dashboard" element={<ClientRoute element={<Dashboard />} />} />

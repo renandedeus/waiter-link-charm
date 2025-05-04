@@ -57,19 +57,20 @@ const Index = () => {
       interval = setInterval(() => {
         setPaymentCountdown((prev) => prev - 1);
       }, 1000);
-    } else if (paymentCountdown === 0) {
-      // Simular redirecionamento para gateway de pagamento
+    } else if (showPaymentRedirect && paymentCountdown === 0) {
       // Em produção, este seria um redirect real para o Stripe ou outro gateway
       toast({
         title: "Redirecionando para pagamento",
         description: "Configurando seu método de pagamento para quando o período gratuito terminar.",
       });
+      
+      // Simular um redirecionamento para uma página de pagamento
+      // Em produção, isso seria substituído pelo URL real do gateway de pagamento
+      const paymentUrl = "/payment-gateway"; // No ambiente de produção: URL real do gateway de pagamento
+      navigate(paymentUrl);
+      
       setShowPaymentRedirect(false);
       setPaymentCountdown(5);
-      
-      // Redirecionar para o dashboard após simular o fluxo de pagamento
-      // Em um cenário real, o usuário voltaria do gateway de pagamento
-      setTimeout(() => navigate('/dashboard'), 2000);
     }
     
     return () => clearInterval(interval);
@@ -174,6 +175,11 @@ const Index = () => {
             });
           } else {
             // Login successful
+            toast({
+              title: "Login realizado com sucesso",
+              description: "Você será redirecionado para o dashboard",
+              variant: "success",
+            });
             navigate('/dashboard');
           }
         }
