@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { logAccess } from '@/contexts/auth/utils';
 
 type SignupFormProps = {
   email: string;
@@ -60,10 +61,10 @@ const SignupForm = ({
     setIsLoading(true);
     
     try {
-      console.log("Attempting signup with email:", email);
-      console.log("Using redirect URL:", getSiteURL());
+      console.log("Tentando registro com email:", email);
+      console.log("URL de redirecionamento:", getSiteURL());
       
-      // First try signing up directly
+      // Primeiro tentamos registrar o usuário diretamente
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -71,12 +72,12 @@ const SignupForm = ({
           data: {
             name,
           },
-          emailRedirectTo: getSiteURL(),
+          emailRedirectTo: `${getSiteURL()}/auth-callback`,
         },
       });
       
       if (error) {
-        // If error is not because user already exists
+        // Se o erro não for porque o usuário já existe
         if (!error.message.includes('already been registered')) {
           setError(error.message || 'Erro ao criar conta');
           toast({
@@ -85,11 +86,11 @@ const SignupForm = ({
             variant: "destructive",
           });
         } else {
-          // User already exists, try logging in
+          // Usuário já existe, tentar fazer login
           const { error: signInError } = await signIn(email, password);
           
           if (signInError) {
-            // If can't login, probably needs to confirm email
+            // Se não conseguir fazer login, provavelmente precisa confirmar o email
             setActiveTab('login');
             setInfoMessage('Este email já está registrado. Por favor, confirme seu email para fazer login.');
             toast({
@@ -98,17 +99,28 @@ const SignupForm = ({
               variant: "info",
             });
           } else {
-            // Login successful
-            toast({
-              title: "Login realizado com sucesso",
-              description: "Você será redirecionado para o dashboard",
-              variant: "success",
-            });
-            navigate('/dashboard');
+            // Login bem-sucedido, registre este acesso
+            try {
+              await logAccess('login_existing_user');
+              
+              // Redirecionar para o processo de escolha de plano
+              toast({
+                title: "Login realizado com sucesso",
+                description: "Você será redirecionado para escolher um plano",
+                variant: "success",
+              });
+              
+              // Redirecionamento direto para a página de pagamento
+              setTimeout(() => {
+                navigate('/payment-gateway');
+              }, 1500);
+            } catch (logError) {
+              console.error("Erro ao registrar acesso:", logError);
+            }
           }
         }
       } else if (data?.user) {
-        // If signup was successful
+        // Se o registro foi bem-sucedido
         if (data.user.identities?.length === 0) {
           toast({
             title: "Email já registrado",
@@ -117,6 +129,13 @@ const SignupForm = ({
           });
           setActiveTab('login');
         } else {
+          // Registrar o acesso do novo usuário
+          try {
+            await logAccess('signup_success', data.user.id);
+          } catch (logError) {
+            console.error("Erro ao registrar acesso de signup:", logError);
+          }
+          
           toast({
             title: "Cadastro realizado com sucesso!",
             description: "Você tem 14 dias gratuitos. Você será redirecionado para configurar seu método de pagamento.",
@@ -128,7 +147,7 @@ const SignupForm = ({
         }
       }
     } catch (err) {
-      console.error('Signup error:', err);
+      console.error('Erro no signup:', err);
       setError('Ocorreu um erro inesperado');
       toast({
         title: "Erro",

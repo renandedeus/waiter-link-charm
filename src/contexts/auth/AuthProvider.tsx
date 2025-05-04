@@ -56,10 +56,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      const userEmail = user.email || '';
       const { data, error } = await supabase
         .from('admin_users')
         .select('id, email, role')
-        .eq('email', user.email || '')
+        .eq('email', userEmail)
         .single();
 
       if (error) {

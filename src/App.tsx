@@ -16,6 +16,7 @@ import AdminRestaurantDetail from "./pages/admin/RestaurantDetail";
 import AdminExports from "./pages/admin/Exports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminBackups from "./pages/admin/Backups";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +100,7 @@ const App = () => {
               <Route path="/" element={<AuthRedirect element={<Index />} whenAuthenticated="/dashboard" whenAdmin="/admin" />} />
               <Route path="/r/:id" element={<Navigate to="/" />} />
               <Route path="/payment-gateway" element={<PaymentGateway />} />
+              <Route path="/auth-callback" element={<AuthCallback />} />
               
               {/* Client routes */}
               <Route path="/dashboard" element={<ClientRoute element={<Dashboard />} />} />

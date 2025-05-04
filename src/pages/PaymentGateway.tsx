@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle, ShieldCheck } fr
 import { supabase } from '@/integrations/supabase/client';
 import StripePaymentForm from '@/components/StripePaymentForm';
 import { logAccess } from '@/contexts/auth/utils';
+import { useAuth } from '@/contexts/auth';
 
 interface PaymentResponse {
   clientSecret: string;
@@ -22,6 +24,7 @@ const PaymentGateway = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('mensal');
@@ -31,6 +34,16 @@ const PaymentGateway = () => {
   const canceled = searchParams.get('canceled') === 'true';
 
   useEffect(() => {
+    // Log ao carregar a página
+    const logPageView = async () => {
+      if (user) {
+        await logAccess('payment_page_view', user.id);
+        console.log("Página de pagamento visualizada pelo usuário:", user.email);
+      }
+    };
+    
+    logPageView();
+    
     if (canceled) {
       toast({
         title: "Pagamento cancelado",
@@ -38,7 +51,7 @@ const PaymentGateway = () => {
         variant: "destructive",
       });
     }
-  }, [canceled, toast]);
+  }, [canceled, toast, user]);
 
   const handleCreatePaymentIntent = async (planType: string) => {
     setIsProcessing(true);
@@ -46,14 +59,17 @@ const PaymentGateway = () => {
     
     try {
       console.log('Iniciando processo de pagamento para plano:', planType);
+      
       const session = await supabase.auth.getSession();
       
       if (!session?.data.session) {
+        console.error("Sessão não encontrada. Usuário não está autenticado.");
         throw new Error("Sessão de usuário não encontrada. Faça login novamente.");
       }
       
       // Log do acesso para fins de auditoria
       await logAccess('payment_attempt', session.data.session.user.id);
+      console.log("Usuário tentando criar intenção de pagamento:", session.data.session.user.email);
       
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { planType }
@@ -62,7 +78,7 @@ const PaymentGateway = () => {
       console.log('Resposta da função create-subscription:', data);
       
       if (error) {
-        console.error('Erro na invocação da função:', error);
+        console.error('Erro na invocação da função create-subscription:', error);
         throw new Error(error.message || 'Erro ao processar pagamento');
       }
       
@@ -70,9 +86,14 @@ const PaymentGateway = () => {
         setPaymentResponse(data);
         setActiveTab('payment');
         console.log('Redirecionando para a aba de pagamento com clientSecret:', data.clientSecret);
+        
+        // Log de sucesso na criação da intenção de pagamento
+        await logAccess('payment_intent_created', session.data.session.user.id);
       } else if (data?.error) {
+        console.error('Erro retornado pela função:', data.error);
         throw new Error(data.error);
       } else {
+        console.error('Dados de pagamento não retornados pela função');
         throw new Error('Não foi possível obter os dados de pagamento');
       }
     } catch (error: any) {
@@ -96,6 +117,11 @@ const PaymentGateway = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      
+      // Registrar o erro
+      if (user) {
+        await logAccess(`payment_error: ${errorMessage.substring(0, 50)}`, user.id);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -109,6 +135,15 @@ const PaymentGateway = () => {
       variant: "default",
     });
     
+    // Registrar o sucesso do pagamento
+    const logSuccess = async () => {
+      if (user) {
+        await logAccess('payment_success', user.id);
+      }
+    };
+    
+    logSuccess();
+    
     setTimeout(() => {
       navigate('/dashboard');
     }, 2000);
@@ -117,6 +152,15 @@ const PaymentGateway = () => {
   const handleCancel = () => {
     setPaymentResponse(null);
     setActiveTab('select-plan');
+    
+    // Registrar o cancelamento
+    const logCancel = async () => {
+      if (user) {
+        await logAccess('payment_canceled', user.id);
+      }
+    };
+    
+    logCancel();
   };
 
   const handleRetry = () => {

@@ -4,11 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { logAccess } from '@/contexts/auth/utils';
+import { useAuth } from '@/contexts/auth';
 
 const PaymentRedirect = () => {
   const [paymentCountdown, setPaymentCountdown] = useState(5);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -20,18 +23,26 @@ const PaymentRedirect = () => {
 
   useEffect(() => {
     if (paymentCountdown === 0) {
-      // Em produção, este seria um redirect real para o Stripe ou outro gateway
+      // Registrar o evento de redirecionamento para pagamento
+      const logRedirect = async () => {
+        try {
+          await logAccess('payment_redirect', user?.id);
+        } catch (err) {
+          console.error('Erro ao registrar redirecionamento de pagamento:', err);
+        }
+      };
+      
+      logRedirect();
+      
       toast({
         title: "Redirecionando para pagamento",
         description: "Configurando seu método de pagamento para quando o período gratuito terminar.",
       });
       
-      // Simular um redirecionamento para uma página de pagamento
-      // Em produção, isso seria substituído pelo URL real do gateway de pagamento
-      const paymentUrl = "/payment-gateway"; // No ambiente de produção: URL real do gateway de pagamento
-      navigate(paymentUrl);
+      // Redirecionar para a página de pagamento
+      navigate("/payment-gateway");
     }
-  }, [paymentCountdown, navigate, toast]);
+  }, [paymentCountdown, navigate, toast, user]);
 
   return (
     <div className="space-y-4">
