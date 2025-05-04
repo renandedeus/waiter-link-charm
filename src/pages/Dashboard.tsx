@@ -11,6 +11,7 @@ import { ReviewsList } from '@/components/ReviewsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/contexts/AuthContext';
 import { Waiter, Restaurant, Review } from '@/types';
+import { useToast } from "@/components/ui/use-toast";
 import { 
   createWaiter, 
   deleteWaiter, 
@@ -25,41 +26,84 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'leaderboard' | 'reviews'>('overview');
   const [waiters, setWaiters] = useState<Waiter[]>([]);
   const [restaurant, setRestaurant] = useState<Restaurant>({ id: '', name: '', googleReviewUrl: '' });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const auth = useAuth();
+  const { toast } = useToast();
   
   useEffect(() => {
     // Inicializar dados de exemplo para desenvolvimento
     const initData = async () => {
-      await initializeSampleData();
-      
-      // Carregar dados iniciais
-      const fetchedWaiters = await getAllWaiters();
-      setWaiters(fetchedWaiters);
-      
-      const fetchedRestaurant = await getRestaurantInfo();
-      setRestaurant(fetchedRestaurant);
+      try {
+        setIsLoading(true);
+        await initializeSampleData();
+        
+        // Carregar dados iniciais
+        const fetchedWaiters = await getAllWaiters();
+        setWaiters(fetchedWaiters);
+        
+        const fetchedRestaurant = await getRestaurantInfo();
+        setRestaurant(fetchedRestaurant);
+      } catch (error) {
+        console.error('Erro ao inicializar dados:', error);
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Usando dados locais para continuar.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initData();
-  }, []);
+  }, [toast]);
 
   const handleAddWaiter = async (name: string, email: string, whatsapp: string): Promise<Waiter> => {
-    const newWaiter = await createWaiter(name, email, whatsapp);
-    setWaiters([...waiters, newWaiter]);
-    return newWaiter;
+    try {
+      const newWaiter = await createWaiter(name, email, whatsapp);
+      setWaiters(prev => [...prev, newWaiter]);
+      return newWaiter;
+    } catch (error) {
+      console.error("Erro ao adicionar garçom:", error);
+      toast({
+        title: "Erro ao adicionar garçom",
+        description: "Ocorreu um erro ao adicionar o garçom. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+      throw error; // Re-throw para que a UI possa lidar com o erro
+    }
   };
 
   const handleDeleteWaiter = async (id: string) => {
-    await deleteWaiter(id);
-    setWaiters(waiters.filter(w => w.id !== id));
+    try {
+      await deleteWaiter(id);
+      setWaiters(waiters.filter(w => w.id !== id));
+    } catch (error) {
+      console.error("Erro ao excluir garçom:", error);
+      toast({
+        title: "Erro ao excluir garçom",
+        description: "Ocorreu um erro ao excluir o garçom. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveRestaurant = async (name: string, googleReviewUrl: string) => {
-    const updatedRestaurant = await setRestaurantInfo(name, googleReviewUrl);
-    setRestaurant({
-      ...updatedRestaurant,
-      googleReviewUrl: updatedRestaurant.google_review_url || googleReviewUrl
-    });
+    try {
+      const updatedRestaurant = await setRestaurantInfo(name, googleReviewUrl);
+      setRestaurant(updatedRestaurant);
+      toast({
+        title: "Informações salvas",
+        description: "As informações do restaurante foram salvas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar informações do restaurante:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar as informações. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleRestaurantUpdate = (updatedRestaurant: Restaurant) => {
@@ -92,57 +136,68 @@ const Dashboard = () => {
             {activePage === 'dashboard' ? 'Painel' : 'Gerenciar Garçons'}
           </h1>
           
-          {activePage === 'dashboard' && (
-            <>
-              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-                <TabsList className="grid grid-cols-4">
-                  <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                  <TabsTrigger value="metrics">Métricas</TabsTrigger>
-                  <TabsTrigger value="leaderboard">Ranking</TabsTrigger>
-                  <TabsTrigger value="reviews">Avaliações</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="overview" className="pt-4">
-                  <Stats waiters={waiters} restaurant={restaurant} />
-                  <div className="mt-6">
-                    <RestaurantForm restaurant={restaurant} onSave={handleSaveRestaurant} />
-                  </div>
-                  
-                  {restaurant.name && restaurant.googleReviewUrl && (
-                    <div className="mt-6">
-                      <h2 className="text-lg font-medium mb-2">Link de Avaliação do Restaurante</h2>
-                      <div className="bg-white p-4 rounded-md border">
-                        <p className="break-all">{restaurant.googleReviewUrl}</p>
-                      </div>
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="metrics" className="pt-4">
-                  <RestaurantMetrics restaurant={restaurant} onUpdate={handleRestaurantUpdate} />
-                </TabsContent>
-                
-                <TabsContent value="leaderboard" className="pt-4">
-                  <Leaderboard />
-                </TabsContent>
-                
-                <TabsContent value="reviews" className="pt-4">
-                  <ReviewsList 
-                    reviews={restaurant.recentReviews || []} 
-                    onReviewTranslated={handleReviewTranslated}
-                  />
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
-          
-          {activePage === 'waiters' && (
-            <>
-              <WaiterForm onSave={handleAddWaiter} />
-              <div className="mt-6">
-                <h2 className="text-lg font-medium mb-4">Seus Garçons</h2>
-                <WaiterList waiters={waiters} onDelete={handleDeleteWaiter} />
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+                <p>Carregando...</p>
               </div>
+            </div>
+          ) : (
+            <>
+              {activePage === 'dashboard' && (
+                <>
+                  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+                    <TabsList className="grid grid-cols-4">
+                      <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                      <TabsTrigger value="metrics">Métricas</TabsTrigger>
+                      <TabsTrigger value="leaderboard">Ranking</TabsTrigger>
+                      <TabsTrigger value="reviews">Avaliações</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="overview" className="pt-4">
+                      <Stats waiters={waiters} restaurant={restaurant} />
+                      <div className="mt-6">
+                        <RestaurantForm restaurant={restaurant} onSave={handleSaveRestaurant} />
+                      </div>
+                      
+                      {restaurant.name && restaurant.googleReviewUrl && (
+                        <div className="mt-6">
+                          <h2 className="text-lg font-medium mb-2">Link de Avaliação do Restaurante</h2>
+                          <div className="bg-white p-4 rounded-md border">
+                            <p className="break-all">{restaurant.googleReviewUrl}</p>
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
+                    
+                    <TabsContent value="metrics" className="pt-4">
+                      <RestaurantMetrics restaurant={restaurant} onUpdate={handleRestaurantUpdate} />
+                    </TabsContent>
+                    
+                    <TabsContent value="leaderboard" className="pt-4">
+                      <Leaderboard />
+                    </TabsContent>
+                    
+                    <TabsContent value="reviews" className="pt-4">
+                      <ReviewsList 
+                        reviews={restaurant.recentReviews || []} 
+                        onReviewTranslated={handleReviewTranslated}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </>
+              )}
+              
+              {activePage === 'waiters' && (
+                <>
+                  <WaiterForm onSave={handleAddWaiter} />
+                  <div className="mt-6">
+                    <h2 className="text-lg font-medium mb-4">Seus Garçons</h2>
+                    <WaiterList waiters={waiters} onDelete={handleDeleteWaiter} />
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
