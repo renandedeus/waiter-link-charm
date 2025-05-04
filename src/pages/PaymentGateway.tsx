@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StripePaymentForm from '@/components/StripePaymentForm';
 
@@ -46,16 +46,22 @@ const PaymentGateway = () => {
     
     try {
       console.log('Iniciando processo de pagamento para plano:', planType);
+      const session = await supabase.auth.getSession();
+      
+      if (!session?.data.session) {
+        throw new Error("Sessão de usuário não encontrada. Faça login novamente.");
+      }
+      
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { planType }
       });
+      
+      console.log('Resposta da função create-subscription:', data);
       
       if (error) {
         console.error('Erro na invocação da função:', error);
         throw new Error(error.message || 'Erro ao processar pagamento');
       }
-      
-      console.log('Resposta da função create-subscription:', data);
       
       if (data?.clientSecret) {
         setPaymentResponse(data);
@@ -65,12 +71,25 @@ const PaymentGateway = () => {
       } else {
         throw new Error('Não foi possível obter os dados de pagamento');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar intent de pagamento:', error);
-      setError(error.message || "Ocorreu um erro ao processar sua solicitação de pagamento");
+      let errorMessage = "Ocorreu um erro ao processar sua solicitação de pagamento";
+      
+      // Melhorar mensagens de erro para o usuário
+      if (error.message.includes('autenticação') || error.message.includes('login')) {
+        errorMessage = "Erro de autenticação. Por favor, faça login novamente.";
+      } else if (error.message.includes('STRIPE_SECRET_KEY')) {
+        errorMessage = "Erro de configuração do servidor. Entre em contato com o suporte.";
+      } else if (error.message.includes('Edge Function')) {
+        errorMessage = "Erro de comunicação com o servidor. Tente novamente em alguns instantes.";
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+      
+      setError(errorMessage);
       toast({
         title: "Erro no processamento",
-        description: error.message || "Ocorreu um erro ao processar sua solicitação de pagamento",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -94,6 +113,11 @@ const PaymentGateway = () => {
   const handleCancel = () => {
     setPaymentResponse(null);
     setActiveTab('select-plan');
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    // Para casos em que quisermos tentar novamente sem mudar o plano
   };
 
   const planDetails = [
@@ -163,7 +187,7 @@ const PaymentGateway = () => {
                   {error && (
                     <div className="bg-red-50 border border-red-300 rounded-md p-4 mb-6">
                       <div className="flex items-start">
-                        <AlertTriangle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+                        <AlertTriangle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="text-sm text-red-800">
                             <strong>Erro no processamento:</strong> {error}
@@ -171,6 +195,14 @@ const PaymentGateway = () => {
                           <p className="text-sm text-red-700 mt-1">
                             Por favor, tente novamente ou entre em contato com o suporte.
                           </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-2 text-xs" 
+                            onClick={handleRetry}
+                          >
+                            Tentar novamente
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -211,13 +243,20 @@ const PaymentGateway = () => {
                   
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
                     <div className="flex items-start">
-                      <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                      <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-blue-800">
                           <strong>Importante:</strong> Ao prosseguir, você será solicitado a fornecer seus dados de pagamento de forma segura.
                         </p>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-center bg-green-50 border border-green-200 rounded-md p-3">
+                    <ShieldCheck className="h-5 w-5 text-green-500 mr-2" />
+                    <p className="text-sm text-green-800">
+                      Pagamento seguro processado pela Stripe
+                    </p>
                   </div>
                   
                   <Button 
@@ -242,7 +281,7 @@ const PaymentGateway = () => {
                 <TabsContent value="payment" className="space-y-4 mt-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
                     <div className="flex items-start">
-                      <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                      <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-blue-800">
                           <strong>Pagamento Seguro:</strong> Seus dados de cartão são criptografados e processados diretamente pelo Stripe, não armazenamos informações sensíveis.
