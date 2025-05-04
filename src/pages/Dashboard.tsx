@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
@@ -27,7 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
-  const [activePage, setActivePage] = useState<'dashboard' | 'waiters' | 'google'>('dashboard');
+  const [activePage, setActivePage] = useState<'dashboard' | 'waiters' | 'google' | 'reviews'>('dashboard');
   const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'leaderboard' | 'reviews'>('overview');
   const [waiters, setWaiters] = useState<Waiter[]>([]);
   const [restaurant, setRestaurant] = useState<Restaurant>({ id: '', name: '', googleReviewUrl: '' });
@@ -161,11 +160,15 @@ const Dashboard = () => {
     setShowWelcomeVideo(false);
   };
 
+  const handleNavigate = (page: 'dashboard' | 'waiters' | 'google' | 'reviews') => {
+    setActivePage(page);
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar 
         activePage={activePage} 
-        onNavigate={setActivePage} 
+        onNavigate={handleNavigate} 
       />
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto p-4 md:p-6 space-y-6">

@@ -34,11 +34,12 @@ const ReviewsManagement = () => {
       
       if (error) throw error;
       
-      // Add date field to match Review type if it's missing
+      // Process the data to ensure it matches the Review type
       const reviewsWithDate = (data || []).map(review => ({
         ...review,
-        date: review.date || review.created_at,
-        translatedContent: review.translated_content // Add camelCase version for compatibility
+        date: review.created_at, // Ensure date field exists using created_at
+        translated_content: review.translated_content || "",
+        translatedContent: review.translated_content || "" // Add camelCase version for compatibility
       }));
       
       setReviews(reviewsWithDate);
