@@ -14,11 +14,16 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      storage: localStorage,
-      persistSession: true,
       autoRefreshToken: true,
+      persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'implicit'
+      flowType: 'implicit',
     }
   }
 );
+
+// Verifica se a sessão foi carregada corretamente
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Evento de autenticação:', event);
+  console.log('Sessão atual:', session);
+});
