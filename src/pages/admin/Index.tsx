@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +46,7 @@ const Admin = () => {
         const { data: conversions, error: convError } = await supabase
           .from('clicks')
           .select('*', { count: 'exact' })
-          .eq('converted', true);
+          .eq('converted', true as any);
 
         if (convError) throw convError;
         
@@ -55,7 +56,7 @@ const Admin = () => {
         const { count: activeRestaurants, error: activeError } = await supabase
           .from('restaurants')
           .select('*', { count: 'exact', head: true })
-          .eq('plan_status', 'active');
+          .eq('plan_status', 'active' as any);
 
         if (activeError) throw activeError;
         
@@ -63,7 +64,7 @@ const Admin = () => {
         const { count: trialRestaurants, error: trialError } = await supabase
           .from('restaurants')
           .select('*', { count: 'exact', head: true })
-          .eq('plan_status', 'trial');
+          .eq('plan_status', 'trial' as any);
 
         if (trialError) throw trialError;
         
@@ -71,7 +72,7 @@ const Admin = () => {
         const { count: expiredRestaurants, error: expiredError } = await supabase
           .from('restaurants')
           .select('*', { count: 'exact', head: true })
-          .eq('plan_status', 'expired');
+          .eq('plan_status', 'expired' as any);
 
         if (expiredError) throw expiredError;
         
@@ -79,7 +80,7 @@ const Admin = () => {
         const { count: canceledRestaurants, error: canceledError } = await supabase
           .from('restaurants')
           .select('*', { count: 'exact', head: true })
-          .eq('plan_status', 'canceled');
+          .eq('plan_status', 'canceled' as any);
         
         if (canceledError) throw canceledError;
         

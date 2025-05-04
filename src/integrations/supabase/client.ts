@@ -23,9 +23,7 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'implicit',
-      storage: localStorage,
-      // Added site URL to ensure correct redirect URL in auth flows
-      redirectTo: getSiteURL()
+      storage: localStorage
     }
   }
 );

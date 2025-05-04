@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -63,12 +64,12 @@ const Backups = () => {
         file_path: `backups/backup_manual_${new Date().toISOString().replace(/[:.]/g, '_')}.sql`,
         file_size: Math.floor(Math.random() * 5000000) + 1000000, // Tamanho aleatório entre 1-6 MB
         backup_type: 'manual',
-        status: 'completed',
+        status: 'completed'
       };
       
       const { error } = await supabase
         .from('backups')
-        .insert(backupData);
+        .insert([backupData]);
 
       if (error) throw error;
       

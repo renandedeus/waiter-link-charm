@@ -8,7 +8,7 @@ export const logAccess = async (action: string, userId?: string, isAdmin: boolea
       user_id: userId || null,
       action,
       ip_address: 'client-side',
-      user_agent: navigator.userAgent,
+      user_agent: navigator.userAgent
     });
   } catch (error) {
     console.error('Failed to log access:', error);
