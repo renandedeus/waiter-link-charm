@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export const logAccess = async (action: string, userId?: string, isAdmin: boolean = false) => {
+export const logAccess = async (action: string, userId?: string | null, isAdmin: boolean = false) => {
   try {
     await supabase.from('access_logs').insert({
       user_type: isAdmin ? 'admin' : 'restaurant',

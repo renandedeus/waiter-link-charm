@@ -10,6 +10,7 @@ import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle, ShieldCheck } fr
 import { supabase } from '@/integrations/supabase/client';
 import StripePaymentForm from '@/components/StripePaymentForm';
 import { useAuth } from '@/contexts/auth';
+import { logAccess } from '@/contexts/auth/utils';
 
 interface PaymentResponse {
   clientSecret: string;
@@ -35,20 +36,22 @@ const PaymentGateway = () => {
   // Check if user is authenticated
   useEffect(() => {
     const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      
-      if (!data.user) {
+      if (!user) {
         toast({
           title: "Não autenticado",
           description: "Você precisa estar logado para acessar esta página",
           variant: "destructive",
         });
         navigate('/');
+        return;
       }
+      
+      // Log payment page access
+      await logAccess('payment_page_accessed', user.id);
     };
     
     checkUser();
-  }, [navigate, toast]);
+  }, [navigate, toast, user]);
 
   useEffect(() => {
     if (canceled) {
@@ -61,16 +64,22 @@ const PaymentGateway = () => {
   }, [canceled, toast]);
 
   const handleCreatePaymentIntent = async (planType: string) => {
+    if (!user) {
+      toast({
+        title: "Não autenticado",
+        description: "Você precisa estar logado para realizar um pagamento",
+        variant: "destructive",
+      });
+      navigate('/');
+      return;
+    }
+
     setIsProcessing(true);
     setError(null);
     
     try {
       console.log('Iniciando processo de pagamento para plano:', planType);
-      const session = await supabase.auth.getSession();
-      
-      if (!session?.data.session) {
-        throw new Error("Sessão de usuário não encontrada. Faça login novamente.");
-      }
+      await logAccess('payment_initiated', user.id, false);
       
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { planType }
@@ -86,6 +95,7 @@ const PaymentGateway = () => {
       if (data?.clientSecret) {
         setPaymentResponse(data);
         setActiveTab('payment');
+        await logAccess('payment_form_displayed', user.id, false);
       } else if (data?.error) {
         throw new Error(data.error);
       } else {
@@ -107,6 +117,8 @@ const PaymentGateway = () => {
       }
       
       setError(errorMessage);
+      await logAccess('payment_error', user?.id, false);
+      
       toast({
         title: "Erro no processamento",
         description: errorMessage,
@@ -117,8 +129,12 @@ const PaymentGateway = () => {
     }
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
+    if (!user) return;
+    
     setIsSuccess(true);
+    await logAccess('payment_success', user.id, false);
+    
     toast({
       title: "Pagamento bem-sucedido",
       description: "Seu acesso foi liberado! Você será redirecionado para o dashboard.",
@@ -130,7 +146,11 @@ const PaymentGateway = () => {
     }, 2000);
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    if (user) {
+      await logAccess('payment_canceled', user.id, false);
+    }
+    
     setPaymentResponse(null);
     setActiveTab('select-plan');
   };

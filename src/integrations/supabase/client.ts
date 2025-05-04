@@ -8,7 +8,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 // Get the current site URL dynamically instead of hardcoding localhost
 const getSiteURL = () => {
-  return window.location.origin || 'https://fgpsfqjellkukgnqhmdh.supabase.co';
+  return window.location.origin;
 };
 
 // Import the supabase client like this:
@@ -21,9 +21,7 @@ export const supabase = createClient<Database>(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
-      flowType: 'implicit',
-      storage: localStorage,
+      detectSessionInUrl: true
     }
   }
 );
@@ -31,11 +29,16 @@ export const supabase = createClient<Database>(
 // Debug logging for authentication events
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('[Auth Debug] Event:', event);
-  console.log('[Auth Debug] Session:', session ? {
-    user: session.user?.email,
-    token_expires: new Date(session.expires_at ? session.expires_at * 1000 : 0).toLocaleString(),
-    hasExpired: session.expires_at ? Date.now() / 1000 > session.expires_at : false
-  } : 'No session');
+  
+  if (session) {
+    console.log('[Auth Debug] Session:', {
+      user: session.user?.email,
+      token_expires: new Date(session.expires_at ? session.expires_at * 1000 : 0).toLocaleString(),
+      hasExpired: session.expires_at ? Date.now() / 1000 > session.expires_at : false
+    });
+  } else {
+    console.log('[Auth Debug] No session');
+  }
 });
 
 // Initial session check

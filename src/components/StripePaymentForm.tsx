@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from 'react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logAccess } from '@/contexts/auth/utils';
 
 // Inicialize o Stripe com a chave pública
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
@@ -49,6 +50,7 @@ const PaymentForm = ({
     e.preventDefault();
 
     if (!stripe || !elements) {
+      setMessage("O Stripe ainda não está inicializado. Por favor, aguarde um momento.");
       return;
     }
 
@@ -56,6 +58,13 @@ const PaymentForm = ({
     setMessage(null);
 
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
+      if (userId) {
+        await logAccess('payment_submission', userId, false);
+      }
+      
       let result;
       
       if (paymentType === 'payment') {
@@ -65,6 +74,10 @@ const PaymentForm = ({
         });
         
         if (result.error) {
+          if (userId) {
+            await logAccess('payment_error', userId, false);
+          }
+          
           setMessage(result.error.message || 'Ocorreu um erro ao processar o pagamento.');
           setIsLoading(false);
           return;
@@ -79,9 +92,17 @@ const PaymentForm = ({
         });
         
         if (error || !data.success) {
+          if (userId) {
+            await logAccess('payment_verification_error', userId, false);
+          }
+          
           setMessage('Ocorreu um erro ao verificar o status do pagamento.');
           setIsLoading(false);
           return;
+        }
+        
+        if (userId) {
+          await logAccess('payment_success', userId, false);
         }
       } else if (paymentType === 'subscription') {
         result = await stripe.confirmSetup({
@@ -90,6 +111,10 @@ const PaymentForm = ({
         });
         
         if (result.error) {
+          if (userId) {
+            await logAccess('subscription_error', userId, false);
+          }
+          
           setMessage(result.error.message || 'Ocorreu um erro ao configurar o pagamento.');
           setIsLoading(false);
           return;
@@ -105,9 +130,17 @@ const PaymentForm = ({
         });
         
         if (error || !data.success) {
+          if (userId) {
+            await logAccess('subscription_verification_error', userId, false);
+          }
+          
           setMessage('Ocorreu um erro ao ativar a assinatura.');
           setIsLoading(false);
           return;
+        }
+        
+        if (userId) {
+          await logAccess('subscription_success', userId, false);
         }
       }
 
@@ -117,8 +150,13 @@ const PaymentForm = ({
         onPaymentSuccess();
       }, 2000);
     } catch (error) {
-      setMessage('Ocorreu um erro inesperado ao processar o pagamento.');
       console.error('Erro ao processar pagamento:', error);
+      setMessage('Ocorreu um erro inesperado ao processar o pagamento.');
+      
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user?.id) {
+        await logAccess('payment_unexpected_error', userData.user.id, false);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +164,18 @@ const PaymentForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
+      <PaymentElement options={{
+        layout: {
+          type: 'tabs',
+          defaultCollapsed: false
+        },
+        fields: {
+          billingDetails: {
+            name: 'auto',
+            email: 'never'
+          }
+        }
+      }} />
       
       {message && (
         <Alert variant={isSuccess ? "default" : "destructive"} className={isSuccess ? "bg-green-50 border-green-200" : ""}>
@@ -207,7 +256,22 @@ const StripePaymentForm = ({
   }
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret, locale: 'pt-BR' }}>
+    <Elements stripe={stripePromise} options={{ 
+      clientSecret, 
+      locale: 'pt-BR',
+      appearance: {
+        theme: 'stripe',
+        variables: {
+          colorPrimary: '#10b981',
+          colorBackground: '#ffffff',
+          colorText: '#1f2937',
+          colorDanger: '#ef4444',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          spacingUnit: '4px',
+          borderRadius: '4px'
+        }
+      }
+    }}>
       <PaymentForm 
         clientSecret={clientSecret}
         paymentType={paymentType}
