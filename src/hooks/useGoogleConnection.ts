@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -84,7 +85,7 @@ export const useGoogleConnection = (
     if (typeof window !== 'undefined' && window.google && !isConnected) {
       try {
         window.google.accounts.id.initialize({
-          client_id: "YOUR_CLIENT_ID_FROM_GOOGLE_CLOUD_CONSOLE.apps.googleusercontent.com",
+          client_id: "609592535220-k8apdmmab6asaotegvprhsb2dturjoqv.apps.googleusercontent.com",
           callback: handleGoogleCallback,
           auto_select: false,
           context: 'use'
@@ -150,7 +151,7 @@ export const useGoogleConnection = (
     
     if (window.google && window.google.accounts.oauth2) {
       const client = window.google.accounts.oauth2.initCodeClient({
-        client_id: "YOUR_CLIENT_ID_FROM_GOOGLE_CLOUD_CONSOLE.apps.googleusercontent.com",
+        client_id: "609592535220-k8apdmmab6asaotegvprhsb2dturjoqv.apps.googleusercontent.com",
         scope: "email profile https://www.googleapis.com/auth/business.manage",
         ux_mode: 'popup',
         callback: (response: any) => {
