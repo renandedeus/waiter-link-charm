@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/auth";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Google from "./pages/Google";
 import PaymentGateway from "./pages/PaymentGateway";
 import ReviewsManagement from "./pages/ReviewsManagement";
 import Admin from "./pages/admin/Index";
@@ -105,6 +106,7 @@ const App = () => {
               
               {/* Client routes */}
               <Route path="/dashboard" element={<ClientRoute element={<Dashboard />} />} />
+              <Route path="/google" element={<ClientRoute element={<Google />} />} />
               <Route path="/reviews" element={<ClientRoute element={<ReviewsManagement />} />} />
               
               {/* Admin routes */}
