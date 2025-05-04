@@ -1,69 +1,75 @@
-
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useAuth } from '@/contexts/auth';
-import { Home, Edit, Users, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Home, ListChecks, Google, Settings } from 'lucide-react';
 
 interface SidebarProps {
-  activePage: 'dashboard' | 'waiters' | 'google';
-  onNavigate: (page: 'dashboard' | 'waiters' | 'google') => void;
+  activePage: 'dashboard' | 'waiters' | 'google' | 'reviews';
+  onNavigate: (page: 'dashboard' | 'waiters' | 'google' | 'reviews') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
-  const { signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-    }
-  };
-
   return (
-    <div className="w-64 bg-white shadow-md h-screen flex flex-col">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-bold">Target Avaliações</h2>
-        <p className="text-sm text-gray-500">Gerencie avaliações e desempenho</p>
-      </div>
-      <div className="p-4 flex-1">
-        <nav className="space-y-2">
-          <Button
-            variant={activePage === 'dashboard' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => onNavigate('dashboard')}
-          >
-            <Home className="mr-2 h-4 w-4" />
-            Painel
-          </Button>
-          <Button
-            variant={activePage === 'waiters' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => onNavigate('waiters')}
-          >
-            <Users className="mr-2 h-4 w-4" />
-            Garçons
-          </Button>
-          <Button
-            variant={activePage === 'google' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => onNavigate('google')}
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Conexão Google
-          </Button>
+    <div className="w-64 bg-gray-100 border-r border-gray-200 h-full">
+      <div className="p-4">
+        <h2 className="text-lg font-semibold mb-4">Waiter Link</h2>
+        <nav>
+          <ul className="space-y-2">
+            <li>
+              <Link
+                to="/dashboard"
+                className={`flex items-center px-3 py-2 rounded-md hover:bg-gray-200 ${
+                  activePage === 'dashboard' ? 'bg-gray-200 font-medium' : ''
+                }`}
+                onClick={() => onNavigate('dashboard')}
+              >
+                <Home className="mr-2 h-4 w-4" />
+                Painel
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/waiters"
+                className={`flex items-center px-3 py-2 rounded-md hover:bg-gray-200 ${
+                  activePage === 'waiters' ? 'bg-gray-200 font-medium' : ''
+                }`}
+                onClick={() => onNavigate('waiters')}
+              >
+                <ListChecks className="mr-2 h-4 w-4" />
+                Garçons
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/google"
+                className={`flex items-center px-3 py-2 rounded-md hover:bg-gray-200 ${
+                  activePage === 'google' ? 'bg-gray-200 font-medium' : ''
+                }`}
+                onClick={() => onNavigate('google')}
+              >
+                <Google className="mr-2 h-4 w-4" />
+                Google
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/reviews"
+                className={`flex items-center px-3 py-2 rounded-md hover:bg-gray-200 ${
+                  activePage === 'reviews' ? 'bg-gray-200 font-medium' : ''
+                }`}
+                onClick={() => onNavigate('reviews')}
+              >
+                <ListChecks className="mr-2 h-4 w-4" />
+                Avaliações
+              </Link>
+            </li>
+          </ul>
         </nav>
-      </div>
-      <div className="p-4 border-t mt-auto">
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sair
-        </Button>
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <Link to="/admin/settings" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-200">
+            <Settings className="mr-2 h-4 w-4" />
+            Configurações
+          </Link>
+        </div>
       </div>
     </div>
   );

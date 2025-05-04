@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "./contexts/auth";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import PaymentGateway from "./pages/PaymentGateway";
+import ReviewsManagement from "./pages/ReviewsManagement";
 import Admin from "./pages/admin/Index";
 import AdminLogin from "./pages/admin/Login";
 import AdminRestaurants from "./pages/admin/Restaurants";
@@ -104,6 +105,7 @@ const App = () => {
               
               {/* Client routes */}
               <Route path="/dashboard" element={<ClientRoute element={<Dashboard />} />} />
+              <Route path="/reviews" element={<ClientRoute element={<ReviewsManagement />} />} />
               
               {/* Admin routes */}
               <Route path="/admin/login" element={<AuthRedirect element={<AdminLogin />} whenAdmin="/admin" />} />
