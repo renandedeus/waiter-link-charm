@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -133,7 +132,7 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md mb-8">
+      <div className="w-full max-w-md">
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
@@ -190,10 +189,6 @@ const AdminLogin = () => {
             </p>
           </CardFooter>
         </Card>
-      </div>
-      
-      <div className="w-full max-w-md">
-        <TestCredentials />
       </div>
     </div>
   );

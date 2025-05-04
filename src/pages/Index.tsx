@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthRedirect } from '@/hooks/use-auth-redirect';
-import TestCredentials from '@/components/TestCredentials';
 import AuthTabs from '@/components/auth/AuthTabs';
 import PaymentRedirect from '@/components/auth/PaymentRedirect';
 
@@ -20,7 +19,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-8">
-      <div className="w-full max-w-md px-4 mb-8">
+      <div className="w-full max-w-md px-4">
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Target Avaliações</CardTitle>
@@ -55,11 +54,6 @@ const Index = () => {
             </p>
           </CardFooter>
         </Card>
-      </div>
-      
-      {/* Adicionando o componente de credenciais de teste */}
-      <div className="w-full max-w-md px-4">
-        <TestCredentials />
       </div>
     </div>
   );
