@@ -153,8 +153,8 @@ serve(async (req) => {
           paymentType = "payment";
           break;
         case "anual":
-          amount = 29940; // R$299,40
-          description = "Plano Anual - Waiter Link (6x R$49,90)";
+          amount = 80400; // R$804,00 (12x R$67,00)
+          description = "Plano Anual - Waiter Link (12x R$67,00)";
           paymentType = "payment";
           break;
         default:

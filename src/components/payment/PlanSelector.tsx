@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { AlertTriangle, Info } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Loader2, CreditCard, ShieldCheck } from 'lucide-react';
 
@@ -51,9 +51,9 @@ export const PlanSelector = ({
     {
       id: 'anual',
       name: 'Plano Anual',
-      price: 'R$ 49,90',
-      billingCycle: '6x de R$ 49,90 no cartão',
-      description: 'Pagamento único de R$ 299,40',
+      price: 'R$ 67,00',
+      billingCycle: '12x de R$ 67,00 no cartão',
+      description: 'Pagamento único de R$ 804,00',
       recommended: true
     }
   ];
@@ -92,17 +92,20 @@ export const PlanSelector = ({
           className="grid gap-4 grid-cols-1 md:grid-cols-3"
         >
           {planDetails.map(plan => (
-            <div key={plan.id} className={`relative rounded-lg border p-4 ${plan.recommended ? 'ring-2 ring-primary' : ''}`}>
+            <div 
+              key={plan.id} 
+              className={`relative rounded-lg border p-4 cursor-pointer transition-all duration-200 
+                ${selectedPlan === plan.id 
+                  ? 'ring-2 ring-primary bg-primary/10 border-primary font-medium' 
+                  : 'hover:border-primary/50'}
+                ${plan.recommended ? 'ring-2 ring-primary' : ''}`}
+              onClick={() => onPlanChange(plan.id)}
+            >
               {plan.recommended && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
                   Mais popular
                 </div>
               )}
-              <RadioGroupItem 
-                value={plan.id} 
-                id={plan.id}
-                className="absolute right-4 top-4"
-              />
               <div className="mb-2">
                 <h4 className="font-medium">{plan.name}</h4>
                 <div className="mt-1">

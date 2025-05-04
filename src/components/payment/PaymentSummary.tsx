@@ -40,7 +40,7 @@ const PaymentSummary = ({
             ? 'Pagamento mensal recorrente de R$ 97,00'
             : selectedPlan === 'semestral'
             ? 'Pagamento único em 6x de R$ 87,00 (R$ 522,00)'
-            : 'Pagamento único em 6x de R$ 49,90 (R$ 299,40)'}
+            : 'Pagamento único em 12x de R$ 67,00 (R$ 804,00)'}
         </p>
         
         {paymentResponse && (
