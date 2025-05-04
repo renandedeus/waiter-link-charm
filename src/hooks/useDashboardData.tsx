@@ -42,6 +42,7 @@ export const useDashboardData = () => {
             responsible_name: fetchedRestaurant.responsible_name,
             responsible_email: fetchedRestaurant.responsible_email,
             responsible_phone: fetchedRestaurant.responsible_phone,
+            // Fix the property access to properly handle both naming conventions
             totalReviews: fetchedRestaurant.totalReviews || fetchedRestaurant.total_reviews,
             initialRating: fetchedRestaurant.initialRating || fetchedRestaurant.initial_rating,
             currentRating: fetchedRestaurant.currentRating || fetchedRestaurant.current_rating,
