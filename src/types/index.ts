@@ -53,6 +53,7 @@ export interface Review {
   translated?: boolean;
   translated_content?: string;  // Using snake_case to match database
   translatedContent?: string;   // Adding camelCase for component usage
+  response?: string;  // Adding the response property to fix the error
 }
 
 export interface LeaderboardEntry {
