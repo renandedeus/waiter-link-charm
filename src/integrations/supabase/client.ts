@@ -24,8 +24,10 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true,
       flowType: 'implicit',
       storage: localStorage,
-      // Set the site URL dynamically for redirects
-      redirectTo: getSiteURL()
+      // Set the site URL dynamically for redirects - must be done in the init options
+      // since 'redirectTo' is not a valid property on its own
+      flowType: 'implicit', 
+      // Remove redirectTo as it's not a valid property in the auth options type
     }
   }
 );

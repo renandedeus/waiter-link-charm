@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,69 +12,102 @@ const Admin = () => {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['adminStats'],
     queryFn: async () => {
-      // Get restaurant count
-      const { count: restaurantCount } = await supabase
-        .from('restaurants')
-        .select('*', { count: 'exact', head: true });
-      
-      // Get waiter count
-      const { count: waiterCount } = await supabase
-        .from('waiters')
-        .select('*', { count: 'exact', head: true });
-      
-      // Get click count
-      const { count: clickCount } = await supabase
-        .from('clicks')
-        .select('*', { count: 'exact', head: true });
-      
-      // Get review count
-      const { count: reviewCount } = await supabase
-        .from('reviews')
-        .select('*', { count: 'exact', head: true });
+      try {
+        // Get restaurant count
+        const { count: restaurantCount, error: restError } = await supabase
+          .from('restaurants')
+          .select('*', { count: 'exact', head: true });
+
+        if (restError) throw restError;
         
-      // Get conversion rate
-      const { data: conversions } = await supabase
-        .from('clicks')
-        .select('*', { count: 'exact' })
-        .eq('converted', true);
-      
-      const conversionRate = clickCount > 0 ? (conversions?.length || 0) * 100 / clickCount : 0;
-      
-      // Get active restaurants
-      const { count: activeRestaurants } = await supabase
-        .from('restaurants')
-        .select('*', { count: 'exact', head: true })
-        .eq('plan_status', 'active');
-      
-      // Get trial restaurants
-      const { count: trialRestaurants } = await supabase
-        .from('restaurants')
-        .select('*', { count: 'exact', head: true })
-        .eq('plan_status', 'trial');
-      
-      // Get expired restaurants
-      const { count: expiredRestaurants } = await supabase
-        .from('restaurants')
-        .select('*', { count: 'exact', head: true })
-        .eq('plan_status', 'expired');
-      
-      // Get canceled restaurants
-      const { count: canceledRestaurants } = await supabase
-        .from('restaurants')
-        .select('*', { count: 'exact', head: true })
-        .eq('plan_status', 'canceled');
-      
-      return {
-        restaurantCount: restaurantCount || 0,
-        waiterCount: waiterCount || 0,
-        clickCount: clickCount || 0,
-        reviewCount: reviewCount || 0,
-        conversionRate,
-        activeRestaurants: activeRestaurants || 0,
-        trialRestaurants: trialRestaurants || 0,
-        expiredRestaurants: expiredRestaurants || 0,
-        canceledRestaurants: canceledRestaurants || 0
-      };
+        // Get waiter count
+        const { count: waiterCount, error: waiterError } = await supabase
+          .from('waiters')
+          .select('*', { count: 'exact', head: true });
+
+        if (waiterError) throw waiterError;
+        
+        // Get click count
+        const { count: clickCount, error: clickError } = await supabase
+          .from('clicks')
+          .select('*', { count: 'exact', head: true });
+
+        if (clickError) throw clickError;
+        
+        // Get review count
+        const { count: reviewCount, error: reviewError } = await supabase
+          .from('reviews')
+          .select('*', { count: 'exact', head: true });
+
+        if (reviewError) throw reviewError;
+        
+        // Get conversion rate
+        const { data: conversions, error: convError } = await supabase
+          .from('clicks')
+          .select('*', { count: 'exact' })
+          .eq('converted', true);
+
+        if (convError) throw convError;
+        
+        const conversionRate = clickCount > 0 ? (conversions?.length || 0) * 100 / clickCount : 0;
+        
+        // Get active restaurants
+        const { count: activeRestaurants, error: activeError } = await supabase
+          .from('restaurants')
+          .select('*', { count: 'exact', head: true })
+          .eq('plan_status', 'active');
+
+        if (activeError) throw activeError;
+        
+        // Get trial restaurants
+        const { count: trialRestaurants, error: trialError } = await supabase
+          .from('restaurants')
+          .select('*', { count: 'exact', head: true })
+          .eq('plan_status', 'trial');
+
+        if (trialError) throw trialError;
+        
+        // Get expired restaurants
+        const { count: expiredRestaurants, error: expiredError } = await supabase
+          .from('restaurants')
+          .select('*', { count: 'exact', head: true })
+          .eq('plan_status', 'expired');
+
+        if (expiredError) throw expiredError;
+        
+        // Get canceled restaurants
+        const { count: canceledRestaurants, error: canceledError } = await supabase
+          .from('restaurants')
+          .select('*', { count: 'exact', head: true })
+          .eq('plan_status', 'canceled');
+        
+        if (canceledError) throw canceledError;
+        
+        return {
+          restaurantCount: restaurantCount || 0,
+          waiterCount: waiterCount || 0,
+          clickCount: clickCount || 0,
+          reviewCount: reviewCount || 0,
+          conversionRate,
+          activeRestaurants: activeRestaurants || 0,
+          trialRestaurants: trialRestaurants || 0,
+          expiredRestaurants: expiredRestaurants || 0,
+          canceledRestaurants: canceledRestaurants || 0
+        };
+      } catch (error) {
+        console.error("Error fetching admin stats:", error);
+        return {
+          restaurantCount: 0,
+          waiterCount: 0,
+          clickCount: 0,
+          reviewCount: 0,
+          conversionRate: 0,
+          activeRestaurants: 0,
+          trialRestaurants: 0,
+          expiredRestaurants: 0,
+          canceledRestaurants: 0
+        };
+      }
     }
   });
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,18 @@ const Backups = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBackups(data || []);
+      
+      // Transform the data to match our Backup type
+      const transformedData = data ? data.map(item => ({
+        id: item.id,
+        file_path: item.file_path,
+        file_size: item.file_size,
+        backup_type: item.backup_type,
+        status: item.status,
+        created_at: item.created_at
+      })) : [];
+      
+      setBackups(transformedData);
     } catch (error) {
       console.error('Erro ao buscar backups:', error);
       toast({
@@ -49,7 +59,7 @@ const Backups = () => {
       // Em uma implementação real, chamaríamos uma função serverless para criar o backup
       // Por enquanto, vamos simular o processo adicionando um novo registro de backup
       
-      const newBackup = {
+      const backupData = {
         file_path: `backups/backup_manual_${new Date().toISOString().replace(/[:.]/g, '_')}.sql`,
         file_size: Math.floor(Math.random() * 5000000) + 1000000, // Tamanho aleatório entre 1-6 MB
         backup_type: 'manual',
@@ -58,7 +68,7 @@ const Backups = () => {
       
       const { error } = await supabase
         .from('backups')
-        .insert(newBackup);
+        .insert(backupData);
 
       if (error) throw error;
       
