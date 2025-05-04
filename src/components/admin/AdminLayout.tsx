@@ -12,7 +12,7 @@ interface AdminLayoutProps {
   title?: string;
 }
 
-export const AdminLayout = ({ children, title = "Dashboard" }: AdminLayoutProps) => {
+export const AdminLayout = ({ children, title = "Painel" }: AdminLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export const AdminLayout = ({ children, title = "Dashboard" }: AdminLayoutProps)
     : 'AD';
 
   const menuItems = [
-    { name: 'Dashboard', path: '/admin', icon: <Home className="h-5 w-5" /> },
+    { name: 'Painel', path: '/admin', icon: <Home className="h-5 w-5" /> },
     { name: 'Restaurantes', path: '/admin/restaurants', icon: <Building className="h-5 w-5" /> },
     { name: 'Exportações', path: '/admin/exports', icon: <Download className="h-5 w-5" /> },
     { name: 'Backups', path: '/admin/backups', icon: <Folder className="h-5 w-5" /> },

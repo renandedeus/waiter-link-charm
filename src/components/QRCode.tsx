@@ -30,12 +30,12 @@ export const QRCode = ({ waiterName, qrCodeUrl, trackingLink }: QRCodeProps) => 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">QR Code for {waiterName}</CardTitle>
+        <CardTitle className="text-lg font-medium">QR Code para {waiterName}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center">
         <img 
           src={qrCodeUrl} 
-          alt={`QR Code for ${waiterName}`} 
+          alt={`QR Code para ${waiterName}`} 
           className="w-40 h-40 object-contain mb-4"
         />
         <p className="text-sm text-gray-500 mb-2 text-center">
@@ -44,10 +44,10 @@ export const QRCode = ({ waiterName, qrCodeUrl, trackingLink }: QRCodeProps) => 
       </CardContent>
       <CardFooter className="flex justify-center gap-2 flex-wrap">
         <Button variant="outline" onClick={copyLink}>
-          {copied ? "Copied!" : "Copy Link"}
+          {copied ? "Copiado!" : "Copiar Link"}
         </Button>
         <Button onClick={downloadQRCode}>
-          Download QR Code
+          Baixar QR Code
         </Button>
       </CardFooter>
     </Card>

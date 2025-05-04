@@ -23,7 +23,7 @@ export const Stats = ({ waiters, restaurant }: StatsProps) => {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-3">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Waiters</CardTitle>
+          <CardTitle className="text-sm font-medium">Total de Garçons</CardTitle>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -42,14 +42,14 @@ export const Stats = ({ waiters, restaurant }: StatsProps) => {
         <CardContent>
           <div className="text-2xl font-bold">{totalWaiters}</div>
           <p className="text-xs text-muted-foreground">
-            Registered waiters
+            Garçons registrados
           </p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Review Clicks</CardTitle>
+          <CardTitle className="text-sm font-medium">Total de Cliques em Avaliações</CardTitle>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -67,14 +67,14 @@ export const Stats = ({ waiters, restaurant }: StatsProps) => {
         <CardContent>
           <div className="text-2xl font-bold">{totalClicks}</div>
           <p className="text-xs text-muted-foreground">
-            Total tracked review link clicks
+            Total de cliques rastreados em links de avaliação
           </p>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Top Performing Waiter</CardTitle>
+          <CardTitle className="text-sm font-medium">Garçom com Melhor Desempenho</CardTitle>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -91,7 +91,7 @@ export const Stats = ({ waiters, restaurant }: StatsProps) => {
         <CardContent>
           <div className="text-2xl font-bold">{topWaiter?.name || "N/A"}</div>
           <p className="text-xs text-muted-foreground">
-            {topWaiter ? `${topWaiter.clicks} review clicks` : "No data available"}
+            {topWaiter ? `${topWaiter.clicks} cliques em avaliações` : "Sem dados disponíveis"}
           </p>
         </CardContent>
       </Card>

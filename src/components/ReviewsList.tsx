@@ -34,7 +34,7 @@ export const ReviewsList = ({ reviews, onReviewTranslated }: ReviewsListProps) =
         return next;
       });
     } catch (error) {
-      console.error('Error translating review:', error);
+      console.error('Erro ao traduzir avaliação:', error);
       setTranslatingIds(prev => {
         const next = new Set(prev);
         next.delete(review.id);
@@ -55,11 +55,11 @@ export const ReviewsList = ({ reviews, onReviewTranslated }: ReviewsListProps) =
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Customer Reviews</CardTitle>
-          <CardDescription>What your customers are saying</CardDescription>
+          <CardTitle>Avaliações dos Clientes</CardTitle>
+          <CardDescription>O que seus clientes estão dizendo</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center py-8 text-muted-foreground">No reviews yet.</p>
+          <p className="text-center py-8 text-muted-foreground">Nenhuma avaliação ainda.</p>
         </CardContent>
       </Card>
     );
@@ -67,14 +67,14 @@ export const ReviewsList = ({ reviews, onReviewTranslated }: ReviewsListProps) =
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-medium">Customer Reviews ({reviews.length})</h2>
+      <h2 className="text-lg font-medium">Avaliações dos Clientes ({reviews.length})</h2>
       
       {reviews.map((review) => (
         <Card key={review.id}>
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-base">{review.author || 'Anonymous'}</CardTitle>
+                <CardTitle className="text-base">{review.author || 'Anônimo'}</CardTitle>
                 <CardDescription>{formatDate(review.date)}</CardDescription>
               </div>
               <div className="flex items-center space-x-2">
@@ -99,7 +99,7 @@ export const ReviewsList = ({ reviews, onReviewTranslated }: ReviewsListProps) =
             
             {review.translated && review.translatedContent && (
               <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-600 mb-1 font-medium">Translation:</p>
+                <p className="text-sm text-gray-600 mb-1 font-medium">Tradução:</p>
                 <p className="text-sm">{review.translatedContent}</p>
               </div>
             )}
@@ -111,7 +111,7 @@ export const ReviewsList = ({ reviews, onReviewTranslated }: ReviewsListProps) =
                 onClick={() => handleTranslate(review)}
                 disabled={translatingIds.has(review.id)}
               >
-                {translatingIds.has(review.id) ? 'Translating...' : 'Translate'}
+                {translatingIds.has(review.id) ? 'Traduzindo...' : 'Traduzir'}
               </Button>
             )}
           </CardContent>

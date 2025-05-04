@@ -40,27 +40,27 @@ export const Leaderboard = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Monthly Leaderboard</CardTitle>
-              <CardDescription>Top performing waiters this month</CardDescription>
+              <CardTitle>Ranking Mensal</CardTitle>
+              <CardDescription>Garçons com melhor desempenho este mês</CardDescription>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">
-                {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left
+                {daysLeft} {daysLeft === 1 ? 'dia' : 'dias'} restantes
               </span>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {leaderboard.length === 0 ? (
-            <p className="text-center py-6 text-muted-foreground">No waiters registered yet.</p>
+            <p className="text-center py-6 text-muted-foreground">Nenhum garçom registrado ainda.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">Rank</TableHead>
-                  <TableHead>Waiter</TableHead>
-                  <TableHead className="text-right">Clicks</TableHead>
+                  <TableHead className="w-12">Posição</TableHead>
+                  <TableHead>Garçom</TableHead>
+                  <TableHead className="text-right">Cliques</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -70,17 +70,17 @@ export const Leaderboard = () => {
                       {entry.position === 1 ? (
                         <div className="flex items-center">
                           <Medal className="h-5 w-5 mr-2 text-yellow-500" />
-                          <span>1st</span>
+                          <span>1º</span>
                         </div>
                       ) : (
-                        <span>{entry.position}{entry.position === 2 ? 'nd' : entry.position === 3 ? 'rd' : 'th'}</span>
+                        <span>{entry.position}º</span>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         {entry.waiterName}
                         {entry.position === 1 && (
-                          <Badge variant="secondary" className="ml-2">Top Performer</Badge>
+                          <Badge variant="secondary" className="ml-2">Melhor Desempenho</Badge>
                         )}
                       </div>
                     </TableCell>
@@ -96,16 +96,16 @@ export const Leaderboard = () => {
       {champions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Hall of Fame</CardTitle>
-            <CardDescription>Monthly champions</CardDescription>
+            <CardTitle>Hall da Fama</CardTitle>
+            <CardDescription>Campeões mensais</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Waiter</TableHead>
-                  <TableHead className="text-right">Clicks</TableHead>
+                  <TableHead>Mês</TableHead>
+                  <TableHead>Garçom</TableHead>
+                  <TableHead className="text-right">Cliques</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

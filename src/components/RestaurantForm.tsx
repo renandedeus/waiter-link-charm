@@ -29,13 +29,13 @@ export const RestaurantForm = ({ restaurant, onSave }: RestaurantFormProps) => {
     const newErrors: { name?: string; url?: string } = {};
     
     if (!name) {
-      newErrors.name = "Restaurant name is required";
+      newErrors.name = "Nome do restaurante é obrigatório";
     }
     
     if (!googleReviewUrl) {
-      newErrors.url = "Google Review URL is required";
+      newErrors.url = "URL do Google Review é obrigatório";
     } else if (!validateUrl(googleReviewUrl)) {
-      newErrors.url = "Please enter a valid Google URL";
+      newErrors.url = "Por favor, insira uma URL do Google válida";
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -45,34 +45,34 @@ export const RestaurantForm = ({ restaurant, onSave }: RestaurantFormProps) => {
     
     onSave(name, googleReviewUrl);
     toast({
-      title: "Restaurant information saved",
-      description: "Your restaurant details have been updated successfully.",
+      title: "Informações do restaurante salvas",
+      description: "Os detalhes do seu restaurante foram atualizados com sucesso.",
     });
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Restaurant Information</CardTitle>
+        <CardTitle>Informações do Restaurante</CardTitle>
         <CardDescription>
-          Add your restaurant details and Google review link
+          Adicione os detalhes do seu restaurante e o link de avaliação do Google
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="restaurant-name">Restaurant Name</Label>
+            <Label htmlFor="restaurant-name">Nome do Restaurante</Label>
             <Input
               id="restaurant-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter restaurant name"
+              placeholder="Digite o nome do restaurante"
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="review-url">Google Review URL</Label>
+            <Label htmlFor="review-url">URL do Google Review</Label>
             <Input
               id="review-url"
               value={googleReviewUrl}
@@ -82,7 +82,7 @@ export const RestaurantForm = ({ restaurant, onSave }: RestaurantFormProps) => {
             {errors.url && <p className="text-sm text-red-500">{errors.url}</p>}
           </div>
           
-          <Button type="submit">Save Restaurant Info</Button>
+          <Button type="submit">Salvar Informações</Button>
         </form>
       </CardContent>
     </Card>

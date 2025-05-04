@@ -38,7 +38,7 @@ export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               onClick={() => onNavigate('dashboard')}
             >
               <Home className="h-5 w-5 mr-2" />
-              {!collapsed && <span>Dashboard</span>}
+              {!collapsed && <span>Painel</span>}
             </Button>
           </li>
           <li>

@@ -33,19 +33,19 @@ export const WaiterForm = ({ onSave }: WaiterFormProps) => {
     const newErrors: { name?: string; email?: string; whatsapp?: string } = {};
     
     if (!name) {
-      newErrors.name = "Waiter name is required";
+      newErrors.name = "Nome do garçom é obrigatório";
     }
     
     if (!email) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email é obrigatório";
     } else if (!validateEmail(email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = "Por favor, insira um email válido";
     }
     
     if (!whatsapp) {
-      newErrors.whatsapp = "WhatsApp number is required";
+      newErrors.whatsapp = "Número do WhatsApp é obrigatório";
     } else if (!validateWhatsApp(whatsapp)) {
-      newErrors.whatsapp = "Please enter a valid phone number";
+      newErrors.whatsapp = "Por favor, insira um número válido";
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -62,28 +62,28 @@ export const WaiterForm = ({ onSave }: WaiterFormProps) => {
     setErrors({});
     
     toast({
-      title: "Waiter added successfully",
-      description: "The waiter has been added to your list.",
+      title: "Garçom adicionado com sucesso",
+      description: "O garçom foi adicionado à sua lista.",
     });
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add New Waiter</CardTitle>
+        <CardTitle>Adicionar Novo Garçom</CardTitle>
         <CardDescription>
-          Enter the waiter's information to generate their tracking link and QR code
+          Insira as informações do garçom para gerar seu link de rastreamento e QR code
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="waiter-name">Full Name</Label>
+            <Label htmlFor="waiter-name">Nome Completo</Label>
             <Input
               id="waiter-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter waiter's full name"
+              placeholder="Insira o nome completo do garçom"
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
           </div>
@@ -95,7 +95,7 @@ export const WaiterForm = ({ onSave }: WaiterFormProps) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="waiter@example.com"
+              placeholder="garcom@exemplo.com"
             />
             {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
@@ -112,7 +112,7 @@ export const WaiterForm = ({ onSave }: WaiterFormProps) => {
             {errors.whatsapp && <p className="text-sm text-red-500">{errors.whatsapp}</p>}
           </div>
           
-          <Button type="submit">Add Waiter</Button>
+          <Button type="submit">Adicionar Garçom</Button>
         </form>
       </CardContent>
     </Card>

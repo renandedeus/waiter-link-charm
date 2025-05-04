@@ -32,7 +32,7 @@ const Backups = () => {
       if (error) throw error;
       setBackups(data || []);
     } catch (error) {
-      console.error('Error fetching backups:', error);
+      console.error('Erro ao buscar backups:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os backups',
@@ -46,12 +46,12 @@ const Backups = () => {
   const createBackup = async () => {
     setIsCreatingBackup(true);
     try {
-      // In a real implementation, we would trigger a serverless function to create the backup
-      // For now, we'll simulate the process by adding a new backup record
+      // Em uma implementação real, chamaríamos uma função serverless para criar o backup
+      // Por enquanto, vamos simular o processo adicionando um novo registro de backup
       
       const newBackup = {
-        file_path: `backups/manual_backup_${new Date().toISOString().replace(/[:.]/g, '_')}.sql`,
-        file_size: Math.floor(Math.random() * 5000000) + 1000000, // Random size between 1-6 MB
+        file_path: `backups/backup_manual_${new Date().toISOString().replace(/[:.]/g, '_')}.sql`,
+        file_size: Math.floor(Math.random() * 5000000) + 1000000, // Tamanho aleatório entre 1-6 MB
         backup_type: 'manual',
         status: 'completed',
       };
@@ -67,11 +67,11 @@ const Backups = () => {
         description: 'O backup foi criado com sucesso',
       });
       
-      // Refresh the list
+      // Atualizar a lista
       fetchBackups();
       
     } catch (error) {
-      console.error('Error creating backup:', error);
+      console.error('Erro ao criar backup:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível criar o backup',
@@ -99,11 +99,11 @@ const Backups = () => {
     }
   };
 
-  // Mock backup data for initial UI
+  // Dados de backup de exemplo para a interface inicial
   const mockBackups: Backup[] = [
     {
       id: '1',
-      file_path: 'backups/auto_backup_2023-05-03.sql',
+      file_path: 'backups/backup_auto_2023-05-03.sql',
       file_size: 1540000,
       backup_type: 'automatic',
       status: 'completed',
@@ -111,7 +111,7 @@ const Backups = () => {
     },
     {
       id: '2',
-      file_path: 'backups/auto_backup_2023-05-02.sql',
+      file_path: 'backups/backup_auto_2023-05-02.sql',
       file_size: 1480000,
       backup_type: 'automatic',
       status: 'completed',

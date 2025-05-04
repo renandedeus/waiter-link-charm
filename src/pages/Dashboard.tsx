@@ -28,11 +28,11 @@ const Dashboard = () => {
   const auth = useAuth();
   
   useEffect(() => {
-    // Initialize sample data for development
+    // Inicializar dados de exemplo para desenvolvimento
     const initData = async () => {
       await initializeSampleData();
       
-      // Load initial data
+      // Carregar dados iniciais
       const fetchedWaiters = await getAllWaiters();
       setWaiters(fetchedWaiters);
       
@@ -66,7 +66,7 @@ const Dashboard = () => {
   };
   
   const handleReviewTranslated = (updatedReview: Review) => {
-    // Update the restaurant state with the translated review
+    // Atualizar o estado do restaurante com a avaliação traduzida
     setRestaurant(current => {
       const updatedReviews = current.recentReviews?.map(review => 
         review.id === updatedReview.id ? updatedReview : review
@@ -88,17 +88,17 @@ const Dashboard = () => {
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto p-4 md:p-6 space-y-6">
           <h1 className="text-2xl font-bold">
-            {activePage === 'dashboard' ? 'Dashboard' : 'Manage Waiters'}
+            {activePage === 'dashboard' ? 'Painel' : 'Gerenciar Garçons'}
           </h1>
           
           {activePage === 'dashboard' && (
             <>
               <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
                 <TabsList className="grid grid-cols-4">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="metrics">Metrics</TabsTrigger>
-                  <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                  <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                  <TabsTrigger value="metrics">Métricas</TabsTrigger>
+                  <TabsTrigger value="leaderboard">Ranking</TabsTrigger>
+                  <TabsTrigger value="reviews">Avaliações</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="overview" className="pt-4">
@@ -109,7 +109,7 @@ const Dashboard = () => {
                   
                   {restaurant.name && restaurant.googleReviewUrl && (
                     <div className="mt-6">
-                      <h2 className="text-lg font-medium mb-2">Restaurant Review Link</h2>
+                      <h2 className="text-lg font-medium mb-2">Link de Avaliação do Restaurante</h2>
                       <div className="bg-white p-4 rounded-md border">
                         <p className="break-all">{restaurant.googleReviewUrl}</p>
                       </div>
@@ -139,7 +139,7 @@ const Dashboard = () => {
             <>
               <WaiterForm onSave={handleAddWaiter} />
               <div className="mt-6">
-                <h2 className="text-lg font-medium mb-4">Your Waiters</h2>
+                <h2 className="text-lg font-medium mb-4">Seus Garçons</h2>
                 <WaiterList waiters={waiters} onDelete={handleDeleteWaiter} />
               </div>
             </>

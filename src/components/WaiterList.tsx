@@ -16,11 +16,11 @@ export const WaiterList = ({ waiters, onDelete }: WaiterListProps) => {
   const { toast } = useToast();
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this waiter?')) {
+    if (confirm('Tem certeza que deseja excluir este garçom?')) {
       onDelete(id);
       toast({
-        title: "Waiter removed",
-        description: "The waiter has been removed from your list.",
+        title: "Garçom removido",
+        description: "O garçom foi removido da sua lista.",
       });
     }
   };
@@ -30,7 +30,7 @@ export const WaiterList = ({ waiters, onDelete }: WaiterListProps) => {
       {waiters.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-gray-500">No waiters added yet.</p>
+            <p className="text-center text-gray-500">Nenhum garçom adicionado ainda.</p>
           </CardContent>
         </Card>
       ) : (
@@ -45,14 +45,14 @@ export const WaiterList = ({ waiters, onDelete }: WaiterListProps) => {
                   <div className="space-y-2">
                     <p className="text-sm"><span className="font-medium">Email:</span> {waiter.email}</p>
                     <p className="text-sm"><span className="font-medium">WhatsApp:</span> {waiter.whatsapp}</p>
-                    <p className="text-sm"><span className="font-medium">Clicks:</span> {waiter.clicks}</p>
+                    <p className="text-sm"><span className="font-medium">Cliques:</span> {waiter.clicks}</p>
                     
                     <div className="flex items-center justify-between pt-2">
                       <Button variant="outline" onClick={() => setSelectedWaiter(waiter)}>
-                        View QR Code
+                        Ver QR Code
                       </Button>
                       <Button variant="destructive" onClick={() => handleDelete(waiter.id)}>
-                        Delete
+                        Excluir
                       </Button>
                     </div>
                   </div>
@@ -72,7 +72,7 @@ export const WaiterList = ({ waiters, onDelete }: WaiterListProps) => {
                   />
                 </div>
                 <div className="p-4 border-t flex justify-end">
-                  <Button variant="ghost" onClick={() => setSelectedWaiter(null)}>Close</Button>
+                  <Button variant="ghost" onClick={() => setSelectedWaiter(null)}>Fechar</Button>
                 </div>
               </div>
             </div>
