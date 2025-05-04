@@ -6,20 +6,24 @@ import { Medal, Clock } from "lucide-react";
 import { LeaderboardEntry, MonthlyChampion } from '@/types';
 import { getCurrentLeaderboard, getMonthlyChampions, getDaysUntilEndOfMonth } from '@/services/waiterService';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useAuth } from '@/contexts/auth';
 
 export const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [champions, setChampions] = useState<MonthlyChampion[]>([]);
   const [daysLeft, setDaysLeft] = useState<number>(0);
+  const { user } = useAuth();
   
   useEffect(() => {
     // Load leaderboard data
     const fetchData = async () => {
-      const leaderboardData = await getCurrentLeaderboard();
-      setLeaderboard(leaderboardData);
-      
-      const championsData = await getMonthlyChampions();
-      setChampions(championsData);
+      if (user?.id) {
+        const leaderboardData = await getCurrentLeaderboard(user.id);
+        setLeaderboard(leaderboardData);
+        
+        const championsData = await getMonthlyChampions(user.id);
+        setChampions(championsData);
+      }
       
       setDaysLeft(getDaysUntilEndOfMonth());
     };
@@ -32,7 +36,7 @@ export const Leaderboard = () => {
     }, 86400000); // 24 hours
     
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
   
   return (
     <div className="space-y-6">
@@ -111,7 +115,7 @@ export const Leaderboard = () => {
               <TableBody>
                 {champions.map((champion, index) => (
                   <TableRow key={index}>
-                    <TableCell>{champion.month} {champion.year}</TableCell>
+                    <TableCell>{champion.month}/{champion.year}</TableCell>
                     <TableCell>{champion.waiter_name}</TableCell>
                     <TableCell className="text-right">{champion.clicks}</TableCell>
                   </TableRow>

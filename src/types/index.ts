@@ -1,3 +1,4 @@
+
 export interface Waiter {
   id: string;
   trackingId: string;
@@ -9,6 +10,8 @@ export interface Waiter {
   qrCodeUrl: string;
   clicks: number;
   createdAt: string;
+  conversions?: number;
+  isActive?: boolean;
 }
 
 export interface Restaurant {

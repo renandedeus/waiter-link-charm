@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -94,7 +93,24 @@ const RestaurantDetail = () => {
         .eq('restaurant_id', id);
 
       if (waitersError) throw waitersError;
-      setWaiters(waitersData || []);
+      
+      // Transform database model to app model
+      const transformedWaiters: Waiter[] = waitersData.map(waiter => ({
+        id: waiter.id,
+        trackingId: waiter.tracking_token,
+        restaurantId: waiter.restaurant_id,
+        name: waiter.name,
+        email: waiter.email || '',
+        whatsapp: waiter.whatsapp || '',
+        trackingLink: `${window.location.origin}/r/${waiter.tracking_token}`,
+        qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/r/${waiter.tracking_token}`)}`,
+        clicks: waiter.clicks || 0,
+        createdAt: waiter.created_at,
+        conversions: waiter.conversions || 0,
+        isActive: waiter.is_active
+      }));
+      
+      setWaiters(transformedWaiters);
 
     } catch (error) {
       console.error('Error fetching restaurant data:', error);
@@ -337,7 +353,7 @@ const RestaurantDetail = () => {
                           <div className="text-gray-500 text-sm">{waiter.whatsapp}</div>
                         </TableCell>
                         <TableCell>
-                          {waiter.is_active ? 
+                          {waiter.isActive ? 
                             <Badge className="bg-green-500">Ativo</Badge> : 
                             <Badge className="bg-gray-500">Inativo</Badge>}
                         </TableCell>

@@ -1,12 +1,12 @@
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Review } from '@/types';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 import { translateReview } from '@/services/waiterService';
+import { Star, MessageSquare, Globe } from "lucide-react";
 
 interface ReviewsListProps {
   reviews: Review[];
@@ -14,109 +14,136 @@ interface ReviewsListProps {
 }
 
 export const ReviewsList = ({ reviews, onReviewTranslated }: ReviewsListProps) => {
-  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
-
-  const handleTranslate = async (review: Review) => {
-    try {
-      // Add to translating state
-      setTranslatingIds(prev => new Set(prev).add(review.id));
-      
-      // Translate the review
-      const translatedReview = await translateReview(review.id);
-      
-      // Notify parent component
-      onReviewTranslated(translatedReview);
-      
-      // Remove from translating state
-      setTranslatingIds(prev => {
-        const next = new Set(prev);
-        next.delete(review.id);
-        return next;
-      });
-    } catch (error) {
-      console.error('Erro ao traduzir avaliação:', error);
-      setTranslatingIds(prev => {
-        const next = new Set(prev);
-        next.delete(review.id);
-        return next;
-      });
-    }
-  };
+  const [translating, setTranslating] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const formatDate = (dateStr: string) => {
     try {
-      return format(parseISO(dateStr), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+      return new Date(dateStr).toLocaleDateString('pt-BR');
     } catch (e) {
       return dateStr;
     }
   };
 
-  if (reviews.length === 0) {
+  const handleTranslate = async (review: Review) => {
+    if (!review.content) return;
+    
+    setTranslating(review.id);
+    try {
+      const translatedContent = await translateReview(review.id, review.content);
+      
+      // Create a new review object with the translated content
+      const updatedReview: Review = {
+        ...review,
+        translated: true,
+        translatedContent
+      };
+      
+      onReviewTranslated(updatedReview);
+      
+      toast({
+        title: "Avaliação traduzida",
+        description: "A tradução foi concluída com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error translating review:', error);
+      toast({
+        title: "Erro ao traduzir",
+        description: "Ocorreu um erro ao traduzir a avaliação.",
+        variant: "destructive",
+      });
+    } finally {
+      setTranslating(null);
+    }
+  };
+
+  const renderRatingStars = (rating: number) => {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Avaliações dos Clientes</CardTitle>
-          <CardDescription>O que seus clientes estão dizendo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center py-8 text-muted-foreground">Nenhuma avaliação ainda.</p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center">
+        {[...Array(5)].map((_, index) => (
+          <Star
+            key={index}
+            className={`h-4 w-4 ${
+              index < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+            }`}
+          />
+        ))}
+        <span className="ml-2 text-sm text-gray-600">{rating}/5</span>
+      </div>
     );
-  }
+  };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-medium">Avaliações dos Clientes ({reviews.length})</h2>
+      <h2 className="text-lg font-medium">Avaliações Recentes</h2>
       
-      {reviews.map((review) => (
-        <Card key={review.id}>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-base">{review.author || 'Anônimo'}</CardTitle>
-                <CardDescription>{formatDate(review.date)}</CardDescription>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      className={`${
-                        star <= review.rating ? 'text-yellow-400' : 'text-gray-300'
-                      } text-lg`}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <Badge>{review.rating}/5</Badge>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm">{review.content}</p>
-            
-            {review.translated && review.translated_content && (
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-600 mb-1 font-medium">Tradução:</p>
-                <p className="text-sm">{review.translated_content}</p>
-              </div>
-            )}
-            
-            {!review.translated && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleTranslate(review)}
-                disabled={translatingIds.has(review.id)}
-              >
-                {translatingIds.has(review.id) ? 'Traduzindo...' : 'Traduzir'}
-              </Button>
-            )}
+      {reviews.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-gray-500">Nenhuma avaliação encontrada.</p>
           </CardContent>
         </Card>
-      ))}
+      ) : (
+        <div className="space-y-4">
+          {reviews.map(review => (
+            <Card key={review.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-medium">
+                      {review.author || 'Cliente Anônimo'}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {formatDate(review.date || review.created_at)}
+                    </div>
+                  </div>
+                  {renderRatingStars(review.rating)}
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {review.content && (
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <MessageSquare className="h-5 w-5 mr-2 mt-0.5 text-gray-400" />
+                      <p className="text-gray-700">{review.content}</p>
+                    </div>
+                    
+                    {review.translated && review.translatedContent && (
+                      <div className="flex items-start bg-gray-50 p-3 rounded-md">
+                        <Globe className="h-5 w-5 mr-2 mt-0.5 text-blue-500" />
+                        <div>
+                          <div className="flex items-center">
+                            <Badge variant="outline" className="mb-1">Traduzido</Badge>
+                          </div>
+                          <p className="text-gray-700">{review.translatedContent}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!review.translated && (
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleTranslate(review)}
+                          disabled={translating === review.id}
+                        >
+                          <Globe className="h-4 w-4 mr-2" />
+                          {translating === review.id ? 'Traduzindo...' : 'Traduzir'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {!review.content && (
+                  <p className="text-gray-500 italic">O cliente não deixou comentários.</p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

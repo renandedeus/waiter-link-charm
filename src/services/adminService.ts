@@ -172,7 +172,7 @@ export const createWaiter = async (waiter: Partial<Waiter>) => {
     const { data, error } = await supabase
       .from('waiters')
       .insert({
-        restaurant_id: waiter.restaurant_id,
+        restaurant_id: waiter.restaurantId,
         name: waiter.name,
         email: waiter.email,
         whatsapp: waiter.whatsapp,
