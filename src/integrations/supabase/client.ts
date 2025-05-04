@@ -18,12 +18,27 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'implicit',
+      storage: localStorage, // Garantindo que o localStorage é usado explicitamente
     }
   }
 );
 
-// Verifica se a sessão foi carregada corretamente
+// Verificação detalhada da sessão e eventos de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Evento de autenticação:', event);
-  console.log('Sessão atual:', session);
+  console.log('Detalhes da sessão:', session ? {
+    user: session.user?.email,
+    auth_token: session.access_token ? 'Presente' : 'Ausente',
+    refresh_token: session.refresh_token ? 'Presente' : 'Ausente',
+    expires_at: session.expires_at
+  } : 'Sem sessão');
+});
+
+// Verificação inicial da sessão no carregamento
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('Erro ao verificar sessão:', error);
+  } else {
+    console.log('Status da sessão inicial:', data.session ? 'Autenticado' : 'Não autenticado');
+  }
 });
