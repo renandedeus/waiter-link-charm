@@ -312,19 +312,4 @@ const GoogleConnectionMenu = () => {
   );
 };
 
-// Add Google accounts interface to the global Window object
-declare global {
-  interface Window {
-    google: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void;
-          prompt: (callback: (notification: any) => void) => void;
-          renderButton: (element: HTMLElement, options: any) => void;
-        };
-      };
-    };
-  }
-}
-
 export default GoogleConnectionMenu;
