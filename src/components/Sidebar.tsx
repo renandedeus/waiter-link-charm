@@ -20,7 +20,7 @@ export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
       collapsed ? "w-16" : "w-64"
     )}>
       <div className="flex items-center p-4">
-        {!collapsed && <h1 className="text-xl font-bold flex-1">Waiter Link</h1>}
+        {!collapsed && <h1 className="text-xl font-bold flex-1">Target Avaliações</h1>}
         <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
           <Menu className="h-5 w-5" />
         </Button>
@@ -51,7 +51,7 @@ export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
               onClick={() => onNavigate('waiters')}
             >
               <Users className="h-5 w-5 mr-2" />
-              {!collapsed && <span>Waiters</span>}
+              {!collapsed && <span>Garçons</span>}
             </Button>
           </li>
         </ul>
@@ -67,7 +67,7 @@ export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
           onClick={() => signOut()}
         >
           <LogOut className="h-5 w-5 mr-2" />
-          {!collapsed && <span>Logout</span>}
+          {!collapsed && <span>Sair</span>}
         </Button>
       </div>
     </div>

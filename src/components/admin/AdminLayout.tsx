@@ -46,7 +46,7 @@ export const AdminLayout = ({ children, title = "Dashboard" }: AdminLayoutProps)
       >
         <div className="flex items-center p-4">
           {!collapsed && (
-            <h1 className="text-xl font-bold flex-1">Admin Panel</h1>
+            <h1 className="text-xl font-bold flex-1">Target Admin</h1>
           )}
           <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
             <Menu className="h-5 w-5" />

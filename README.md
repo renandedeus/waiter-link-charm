@@ -1,87 +1,87 @@
 
-# Waiter Link - Platform Admin Documentation
+# Target Avaliações - Documentação da Plataforma
 
-This document provides information about the administration features of the Waiter Link platform.
+Este documento fornece informações sobre as funcionalidades da plataforma Target Avaliações.
 
-## Admin Features Overview
+## Visão Geral das Funcionalidades
 
-The platform includes a comprehensive admin panel with the following capabilities:
+A plataforma inclui um painel administrativo abrangente com os seguintes recursos:
 
-### 🧑‍💼 Admin Panel (Internal Backoffice):
+### 🧑‍💼 Painel Administrativo (Backoffice Interno):
 
-* Protected area with exclusive login for platform team members
-* List of all registered restaurants with:
-  * Restaurant name
-  * Manager's name
-  * Plan status (active, expired, trial, canceled)
-  * Number of active waiters
-  * Total reviews and clicks
-* Manual editing of restaurant data (name, review link, plan)
-* View list of waiters with individual click counts
+* Área protegida com login exclusivo para membros da equipe da plataforma
+* Lista de todos os restaurantes registrados com:
+  * Nome do restaurante
+  * Nome do gerente
+  * Status do plano (ativo, expirado, teste, cancelado)
+  * Número de garçons ativos
+  * Total de avaliações e cliques
+* Edição manual de dados do restaurante (nome, link de avaliação, plano)
+* Visualizar lista de garçons com contagens de cliques individuais
 
-### 🧾 Export and Reports:
+### 🧾 Exportação e Relatórios:
 
-* Export monthly data in CSV:
-  * Clicks per waiter
-  * Monthly ranking
-  * Review evolution
-* PDF generation for automatic sending to restaurant owners
+* Exportar dados mensais em CSV:
+  * Cliques por garçom
+  * Ranking mensal
+  * Evolução das avaliações
+* Geração de PDF para envio automático aos proprietários de restaurantes
 
-### 🧩 Accessibility:
+### 🧩 Acessibilidade:
 
-* High contrast texts and accessible fonts
-* Screen reader support (aria-labels on buttons and charts)
-* Complete responsiveness: mobile, tablet, desktop
+* Textos com alto contraste e fontes acessíveis
+* Suporte a leitores de tela (aria-labels em botões e gráficos)
+* Responsividade completa: mobile, tablet, desktop
 
 ### ⚡ Performance:
 
-* Fast loading with local cache for dashboards
-* Pagination in long lists of waiters and reviews
-* Link and QR Code indexing to avoid duplication
+* Carregamento rápido com cache local para dashboards
+* Paginação em listas longas de garçons e avaliações
+* Indexação de links e código QR para evitar duplicação
 
-### 🔐 Security:
+### 🔐 Segurança:
 
-* Unique tokens per waiter with configurable expiration date
-* Protection against spam/crawlers in redirection links
-* Access logs to the admin panel and for each click on links
+* Tokens únicos por garçom com data de expiração configurável
+* Proteção contra spam/crawlers em links de redirecionamento
+* Logs de acesso ao painel administrativo e para cada clique em links
 
 ### 📂 Backup:
 
-* Automatic daily backup of data in Supabase Storage
-* Manual restoration option via admin panel
+* Backup automático diário de dados no Supabase Storage
+* Opção de restauração manual via painel administrativo
 
-## How to Access the Admin Panel
+## Como Acessar o Painel Administrativo
 
-1. Create an admin user (required before first login)
-2. Access the admin login page at: `/admin/login`
-3. Enter your admin email and password
+1. Crie um usuário administrador (obrigatório antes do primeiro login)
+2. Acesse a página de login de administrador em: `/admin/login`
+3. Insira seu e-mail e senha de administrador
 
-## Creating Your First Admin User
+## Criando Seu Primeiro Usuário Administrador
 
-To create the first admin user, you need to call the create-admin Edge Function with the following parameters:
+Para criar o primeiro usuário administrador, você precisa chamar a Edge Function create-admin com os seguintes parâmetros:
 
 ```json
 {
-  "email": "your-admin-email@example.com",
-  "name": "Your Name",
-  "adminKey": "your-admin-creation-key"
+  "email": "seu-email-admin@exemplo.com",
+  "name": "Seu Nome",
+  "adminKey": "sua-chave-de-criação-admin"
 }
 ```
 
-You need to set the `ADMIN_CREATION_KEY` secret in your Supabase project settings to secure this process.
+Você precisa definir a chave secreta `ADMIN_CREATION_KEY` nas configurações do seu projeto Supabase para proteger esse processo.
 
-## Admin Sections
+## Seções do Administrador
 
-- **Dashboard**: Overview of key metrics
-- **Restaurants**: Manage all restaurants
-- **Exports**: Generate and download reports
-- **Backups**: Manage system backups
-- **Settings**: Configure system parameters
+- **Dashboard**: Visão geral das métricas principais
+- **Restaurantes**: Gerenciar todos os restaurantes
+- **Exportações**: Gerar e baixar relatórios
+- **Backups**: Gerenciar backups do sistema
+- **Configurações**: Configurar parâmetros do sistema
 
-## Recommended Browser
+## Navegador Recomendado
 
-For the best experience, we recommend using the latest version of Chrome, Firefox, or Safari.
+Para a melhor experiência, recomendamos usar a versão mais recente do Chrome, Firefox ou Safari.
 
-## Support
+## Suporte
 
-If you need assistance, contact the development team at support@waiterlink.com.
+Se precisar de assistência, entre em contato com a equipe de desenvolvimento em suporte@targetavaliacoes.com.
