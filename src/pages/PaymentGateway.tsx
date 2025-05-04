@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +30,20 @@ const PaymentGateway = () => {
   const [activeTab, setActiveTab] = useState('select-plan');
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const canceled = searchParams.get('canceled') === 'true';
+
+  // Check if Stripe key is available (for debugging)
+  useEffect(() => {
+    const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    if (!stripeKey) {
+      setDebugInfo('Chave pública do Stripe não encontrada. Verifique a variável de ambiente VITE_STRIPE_PUBLIC_KEY.');
+      console.error('Stripe public key not found in environment variables');
+    } else {
+      console.log('Stripe public key is configured');
+      setDebugInfo(null);
+    }
+  }, []);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -196,6 +208,12 @@ const PaymentGateway = () => {
             <CardDescription className="text-center">
               Escolha o plano que melhor atende às suas necessidades
             </CardDescription>
+            {debugInfo && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-md text-sm text-yellow-800">
+                <AlertTriangle className="inline-block w-4 h-4 mr-1" /> 
+                {debugInfo}
+              </div>
+            )}
           </CardHeader>
           
           <CardContent>

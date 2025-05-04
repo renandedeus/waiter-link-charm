@@ -8,8 +8,9 @@ import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { logAccess } from '@/contexts/auth/utils';
 
-// Inicialize o Stripe com a chave pública
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+// Initialize Stripe with the public key from environment variables
+const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -247,6 +248,17 @@ const StripePaymentForm = ({
   onPaymentSuccess,
   onCancel
 }: StripePaymentFormProps) => {
+  if (!stripePromise) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertDescription className="flex items-center gap-2">
+          <XCircle className="h-5 w-5" />
+          Erro de configuração: Chave pública do Stripe não encontrada.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (!clientSecret) {
     return (
       <div className="flex justify-center items-center py-10">

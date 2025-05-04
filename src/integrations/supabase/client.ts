@@ -8,7 +8,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 // Get the current site URL dynamically instead of hardcoding localhost
 const getSiteURL = () => {
-  return window.location.origin;
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return 'http://localhost:5173'; // Fallback for SSR or tests
 };
 
 // Import the supabase client like this:
