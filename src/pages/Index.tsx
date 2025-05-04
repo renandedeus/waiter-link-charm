@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 const Index = () => {
   const [email, setEmail] = useState('');
@@ -17,13 +19,38 @@ const Index = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
+  const [infoMessage, setInfoMessage] = useState('');
   const { signIn } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Check for auth redirect/hash parameters in the URL
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const errorDescription = hashParams.get('error_description');
+    const accessToken = hashParams.get('access_token');
+    
+    if (errorDescription) {
+      setError(decodeURIComponent(errorDescription));
+      toast({
+        title: "Erro na autenticação",
+        description: decodeURIComponent(errorDescription),
+        variant: "destructive",
+      });
+    } else if (accessToken) {
+      toast({
+        title: "Autenticado com sucesso",
+        description: "Você será redirecionado para o dashboard.",
+        variant: "success",
+      });
+      setTimeout(() => navigate('/dashboard'), 1000);
+    }
+  }, [navigate, toast]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
     
     if (!email || !password) {
       setError('Por favor, preencha todos os campos');
@@ -33,10 +60,12 @@ const Index = () => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login for:", email);
       const { error } = await signIn(email, password);
       
       if (error) {
         if (error.message.includes('Email not confirmed')) {
+          setInfoMessage('Por favor, confirme seu email antes de fazer login ou cadastre-se novamente.');
           toast({
             title: "Email não confirmado",
             description: "Por favor, confirme seu email antes de fazer login ou cadastre-se novamente.",
@@ -69,6 +98,7 @@ const Index = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
     
     if (!email || !password || !name) {
       setError('Por favor, preencha todos os campos');
@@ -78,24 +108,9 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      // Primeiro, verificamos se o usuário já existe
-      const { data: existingUser } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      console.log("Checking if user exists:", email);
       
-      if (existingUser?.user) {
-        toast({
-          title: "Usuário já existe",
-          description: "Este email já está registrado. Por favor, faça login.",
-          variant: "destructive",
-        });
-        setActiveTab('login');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Se não existe, tentamos criar o usuário
+      // First try signing up directly
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -108,14 +123,35 @@ const Index = () => {
       });
       
       if (error) {
-        setError(error.message || 'Erro ao criar conta');
-        toast({
-          title: "Falha no cadastro",
-          description: error.message || 'Não foi possível criar sua conta',
-          variant: "destructive",
-        });
-      } else {
-        if (data?.user?.identities?.length === 0) {
+        // If error is not because user already exists
+        if (!error.message.includes('already been registered')) {
+          setError(error.message || 'Erro ao criar conta');
+          toast({
+            title: "Falha no cadastro",
+            description: error.message || 'Não foi possível criar sua conta',
+            variant: "destructive",
+          });
+        } else {
+          // User already exists, try logging in
+          const { error: signInError } = await signIn(email, password);
+          
+          if (signInError) {
+            // If can't login, probably needs to confirm email
+            setActiveTab('login');
+            setInfoMessage('Este email já está registrado. Por favor, confirme seu email para fazer login.');
+            toast({
+              title: "Email já registrado",
+              description: "Este email já está registrado. Por favor, confirme seu email para fazer login.",
+              variant: "info",
+            });
+          } else {
+            // Login successful
+            navigate('/dashboard');
+          }
+        }
+      } else if (data?.user) {
+        // If signup was successful
+        if (data.user.identities?.length === 0) {
           toast({
             title: "Email já registrado",
             description: "Este email já está registrado. Por favor, faça login.",
@@ -123,9 +159,10 @@ const Index = () => {
           });
           setActiveTab('login');
         } else {
+          setInfoMessage('Cadastro realizado! Verifique seu email para confirmar sua conta ou tente fazer login diretamente.');
           toast({
             title: "Cadastro realizado!",
-            description: "Para simplificar o teste, você já pode fazer login sem precisar confirmar o email.",
+            description: "Verifique seu email para confirmar sua conta ou tente fazer login diretamente.",
             variant: "success",
           });
           setActiveTab('login');
@@ -155,6 +192,13 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {infoMessage && (
+              <Alert variant="info" className="mb-4">
+                <InfoIcon className="h-4 w-4" />
+                <AlertDescription>{infoMessage}</AlertDescription>
+              </Alert>
+            )}
+            
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>

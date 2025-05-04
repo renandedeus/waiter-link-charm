@@ -38,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        console.log("Auth state changed:", _event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -54,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -102,17 +104,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        toast({
-          title: 'Erro ao fazer login',
-          description: error.message,
-          variant: 'destructive',
-        });
+        console.error("Sign in error:", error.message);
+        // Special handling for email not confirmed
+        if (error.message.includes("Email not confirmed")) {
+          // Attempt to sign up again which will resend the confirmation email
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+          
+          if (!signUpError) {
+            toast({
+              title: 'Email de confirmação reenviado',
+              description: 'Por favor, verifique seu email e confirme sua conta.',
+              variant: 'info',
+            });
+          } else {
+            toast({
+              title: 'Erro ao fazer login',
+              description: error.message,
+              variant: 'destructive',
+            });
+          }
+        } else {
+          toast({
+            title: 'Erro ao fazer login',
+            description: error.message,
+            variant: 'destructive',
+          });
+        }
         return { error };
       }
 
