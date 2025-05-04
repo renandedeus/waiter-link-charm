@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Google from "./pages/Google";
 import PaymentGateway from "./pages/PaymentGateway";
 import ReviewsManagement from "./pages/ReviewsManagement";
+import UserSettings from "./pages/UserSettings";
 import Admin from "./pages/admin/Index";
 import AdminLogin from "./pages/admin/Login";
 import AdminRestaurants from "./pages/admin/Restaurants";
@@ -108,6 +109,7 @@ const App = () => {
               <Route path="/dashboard" element={<ClientRoute element={<Dashboard />} />} />
               <Route path="/google" element={<ClientRoute element={<Google />} />} />
               <Route path="/reviews" element={<ClientRoute element={<ReviewsManagement />} />} />
+              <Route path="/settings" element={<ClientRoute element={<UserSettings />} />} />
               
               {/* Admin routes */}
               <Route path="/admin/login" element={<AuthRedirect element={<AdminLogin />} whenAdmin="/admin" />} />

@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, ListChecks, Globe, Settings, MessageSquare } from 'lucide-react';
+import { Home, ListChecks, Globe, Settings, MessageSquare, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
+import { useToast } from '@/components/ui/use-toast';
 
 interface SidebarProps {
   activePage: 'dashboard' | 'waiters' | 'google' | 'reviews';
@@ -9,10 +11,30 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
+  const { signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast({
+        title: "Erro ao fazer logout",
+        description: "Ocorreu um erro ao tentar desconectar",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="w-64 bg-gray-100 border-r border-gray-200 h-full">
       <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Waiter Link</h2>
+        <h2 className="text-lg font-semibold mb-4">Target Avaliações</h2>
         <nav>
           <ul className="space-y-2">
             <li>
@@ -65,11 +87,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
             </li>
           </ul>
         </nav>
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <Link to="/admin/settings" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-200">
+        <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+          <Link to="/settings" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-200">
             <Settings className="mr-2 h-4 w-4" />
             Configurações
           </Link>
+          <button 
+            onClick={handleLogout}
+            className="flex w-full items-center px-3 py-2 rounded-md hover:bg-gray-200 text-left"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sair
+          </button>
         </div>
       </div>
     </div>

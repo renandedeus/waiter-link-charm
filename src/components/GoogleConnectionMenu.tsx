@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/integrations/supabase/client";
 
 interface BusinessLocation {
   id: string;
@@ -16,6 +15,8 @@ interface BusinessLocation {
   placeId: string;
   reviewUrl: string;
 }
+
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // In production, this should come from environment variables
 
 const GoogleConnectionMenu = () => {
   const { toast } = useToast();
@@ -31,8 +32,6 @@ const GoogleConnectionMenu = () => {
   useEffect(() => {
     const checkExistingConnection = async () => {
       try {
-        // For demonstration purposes, we'll use session storage or local state
-        // instead of checking database columns that might not exist yet
         const savedConnectionStatus = localStorage.getItem('google_connection_status');
         const savedLocationId = localStorage.getItem('google_location_id');
         
@@ -40,7 +39,6 @@ const GoogleConnectionMenu = () => {
           setIsConnected(true);
           setSelectedBusiness(savedLocationId);
           
-          // Carregar as informações do negócio se estiver conectado
           loadBusinessData();
         }
       } catch (error) {
@@ -49,18 +47,54 @@ const GoogleConnectionMenu = () => {
     };
     
     checkExistingConnection();
+    
+    // Load Google API script
+    const loadGoogleScript = () => {
+      if (document.querySelector('script[src*="apis.google.com/js/api:client.js"]')) {
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = 'https://apis.google.com/js/api:client.js';
+      script.onload = initGoogleAuth;
+      document.body.appendChild(script);
+    };
+    
+    loadGoogleScript();
   }, []);
+  
+  const initGoogleAuth = () => {
+    if (!window.gapi) return;
+    
+    window.gapi.load('auth2', () => {
+      window.gapi.auth2.init({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/business.manage',
+      });
+    });
+  };
   
   const handleConnect = async () => {
     setIsConnecting(true);
-
+    
     try {
-      // Em uma implementação real, aqui seria iniciado o fluxo OAuth do Google
-      // Para fins de demonstração, vamos simular o processo
+      if (!window.gapi || !window.gapi.auth2) {
+        throw new Error("Google API não carregada corretamente");
+      }
       
-      // Simular autenticação OAuth
+      const googleAuth = window.gapi.auth2.getAuthInstance();
+      const user = await googleAuth.signIn({
+        scope: 'https://www.googleapis.com/auth/business.manage'
+      });
+      
+      const authResponse = user.getAuthResponse();
+      const token = authResponse.access_token;
+      
+      // Aqui você faria uma chamada real para a API do Google para obter as localizações
+      // Por enquanto, vamos usar dados de exemplo
+      
+      // Simular dados retornados após autenticação
       setTimeout(() => {
-        // Simular dados retornados após autenticação
         const mockLocations: BusinessLocation[] = [
           { id: '1', name: 'Restaurante Principal', address: 'Av. Paulista, 1000', placeId: 'ChIJ1234567890abc', reviewUrl: 'https://g.page/r/CdSwPJZk5Ty6EBM/review' },
           { id: '2', name: 'Restaurante Filial', address: 'Rua Augusta, 500', placeId: 'ChIJabcdef1234567', reviewUrl: 'https://g.page/r/CanotherReviewLink' },
@@ -77,12 +111,20 @@ const GoogleConnectionMenu = () => {
         });
         
       }, 2000);
-    } catch (error) {
+      
+      // Em uma implementação completa, você faria algo como:
+      // const response = await fetch('https://mybusinessbusinessinformation.googleapis.com/v1/accounts', {
+      //   headers: { Authorization: `Bearer ${token}` }
+      // });
+      // const data = await response.json();
+      // Processar os dados e obter as localizações
+      
+    } catch (error: any) {
       console.error("Erro ao conectar com o Google:", error);
       setIsConnecting(false);
       toast({
         title: "Erro de conexão",
-        description: "Não foi possível conectar com a conta Google. Tente novamente.",
+        description: error.message || "Não foi possível conectar com a conta Google. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -151,12 +193,12 @@ const GoogleConnectionMenu = () => {
         variant: "success"
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao selecionar negócio:", error);
       setIsLoading(false);
       toast({
         title: "Erro ao conectar empresa",
-        description: "Não foi possível obter os dados da empresa. Tente novamente.",
+        description: error.message || "Não foi possível obter os dados da empresa. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -170,6 +212,13 @@ const GoogleConnectionMenu = () => {
 
   const handleDisconnect = async () => {
     try {
+      if (window.gapi && window.gapi.auth2) {
+        const auth2 = window.gapi.auth2.getAuthInstance();
+        if (auth2) {
+          await auth2.signOut();
+        }
+      }
+      
       // Clear connection data from localStorage
       localStorage.removeItem('google_connection_status');
       localStorage.removeItem('google_location_id');
