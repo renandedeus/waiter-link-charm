@@ -42,6 +42,11 @@ const SignupForm = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Get current site URL for redirects
+  const getSiteURL = () => {
+    return window.location.origin;
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -55,7 +60,8 @@ const SignupForm = ({
     setIsLoading(true);
     
     try {
-      console.log("Checking if user exists:", email);
+      console.log("Attempting signup with email:", email);
+      console.log("Using redirect URL:", getSiteURL());
       
       // First try signing up directly
       const { data, error } = await supabase.auth.signUp({
@@ -65,7 +71,7 @@ const SignupForm = ({
           data: {
             name,
           },
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: getSiteURL(),
         },
       });
       

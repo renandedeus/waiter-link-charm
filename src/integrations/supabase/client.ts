@@ -6,6 +6,11 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://fgpsfqjellkukgnqhmdh.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZncHNmcWplbGxrdWtnbnFobWRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMDI5MjEsImV4cCI6MjA2MTg3ODkyMX0.6mo95QL84cLRx8HZA7F0yM5yjoWF39tQ8i96XZLL9CM";
 
+// Get the current site URL dynamically instead of hardcoding localhost
+const getSiteURL = () => {
+  return window.location.origin || 'https://fgpsfqjellkukgnqhmdh.supabase.co';
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -19,6 +24,8 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true,
       flowType: 'implicit',
       storage: localStorage,
+      // Set the site URL dynamically for redirects
+      redirectTo: getSiteURL()
     }
   }
 );

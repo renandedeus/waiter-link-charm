@@ -53,7 +53,10 @@ serve(async (req) => {
     
     if (!authHeader) {
       console.error("Header de autorização ausente");
-      return new Response(JSON.stringify({ error: "Header de autorização ausente" }), {
+      return new Response(JSON.stringify({ 
+        error: "Header de autorização ausente",
+        code: "auth_missing_header"
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
@@ -66,7 +69,11 @@ serve(async (req) => {
     
     if (userError) {
       console.error("Erro na autenticação:", userError);
-      return new Response(JSON.stringify({ error: `Erro na autenticação: ${userError.message}` }), {
+      return new Response(JSON.stringify({ 
+        error: `Erro na autenticação: ${userError.message}`,
+        code: "auth_invalid_token",
+        message: "Sua sessão expirou ou é inválida. Por favor, faça login novamente."
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
@@ -76,7 +83,11 @@ serve(async (req) => {
     
     if (!user?.email) {
       console.error("Usuário não autenticado ou email não disponível");
-      return new Response(JSON.stringify({ error: "Usuário não autenticado ou email não disponível" }), {
+      return new Response(JSON.stringify({ 
+        error: "Usuário não autenticado ou email não disponível",
+        code: "auth_no_user_data",
+        message: "Não foi possível obter seus dados. Por favor, faça login novamente."
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
@@ -89,7 +100,10 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       console.error("STRIPE_SECRET_KEY não configurada");
-      return new Response(JSON.stringify({ error: "Variável de ambiente STRIPE_SECRET_KEY não configurada" }), {
+      return new Response(JSON.stringify({ 
+        error: "Variável de ambiente STRIPE_SECRET_KEY não configurada",
+        code: "config_missing_key" 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
@@ -189,7 +203,10 @@ serve(async (req) => {
           };
         } catch (stripeError) {
           console.error("Erro ao criar produto/preço/setupIntent no Stripe:", stripeError);
-          return new Response(JSON.stringify({ error: `Erro no Stripe: ${stripeError.message}` }), {
+          return new Response(JSON.stringify({ 
+            error: `Erro no Stripe: ${stripeError.message}`,
+            code: "stripe_setup_error"
+          }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 500,
           });
@@ -220,7 +237,10 @@ serve(async (req) => {
           };
         } catch (stripeError) {
           console.error("Erro ao criar paymentIntent no Stripe:", stripeError);
-          return new Response(JSON.stringify({ error: `Erro no Stripe: ${stripeError.message}` }), {
+          return new Response(JSON.stringify({ 
+            error: `Erro no Stripe: ${stripeError.message}`,
+            code: "stripe_payment_error" 
+          }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 500,
           });
@@ -257,7 +277,10 @@ serve(async (req) => {
       });
     } catch (stripeListError) {
       console.error("Erro ao listar clientes no Stripe:", stripeListError);
-      return new Response(JSON.stringify({ error: `Erro ao verificar cliente no Stripe: ${stripeListError.message}` }), {
+      return new Response(JSON.stringify({ 
+        error: `Erro ao verificar cliente no Stripe: ${stripeListError.message}`,
+        code: "stripe_customer_error"
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
@@ -266,7 +289,11 @@ serve(async (req) => {
     console.error("ERRO:", error instanceof Error ? error.message : String(error));
     console.error("Stack trace:", error instanceof Error ? error.stack : "Sem stack trace");
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      code: "unknown_error",
+      message: "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde."
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
