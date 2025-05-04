@@ -1,46 +1,40 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-
 const GoogleConnectionMenu = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-
   const handleConnect = async () => {
     setIsConnecting(true);
-    
+
     // Simulação de conexão com o Google
     setTimeout(() => {
       setIsConnected(true);
       setIsConnecting(false);
-      
       toast({
         title: "Conta Google conectada",
         description: "Sua conta Google foi conectada com sucesso. Agora podemos acessar as avaliações do seu negócio.",
-        variant: "success",
+        variant: "success"
       });
     }, 2000);
-    
+
     // Aqui seria implementada a autenticação real com o Google usando OAuth
   };
-
   const handleDisconnect = () => {
     setIsConnected(false);
-    
     toast({
       title: "Conta Google desconectada",
-      description: "Sua conta Google foi desconectada.",
+      description: "Sua conta Google foi desconectada."
     });
-    
+
     // Aqui seria implementada a desconexão real da conta do Google
   };
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle>Conexão com o Google</CardTitle>
         <CardDescription>
@@ -50,8 +44,7 @@ const GoogleConnectionMenu = () => {
       
       <CardContent>
         <div className="space-y-4">
-          {isConnected ? (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center">
+          {isConnected ? <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center">
               <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
               <div>
                 <h4 className="text-sm font-medium text-green-900">Conta Google conectada</h4>
@@ -59,9 +52,7 @@ const GoogleConnectionMenu = () => {
                   Sua conta está conectada e podemos acessar as avaliações do seu negócio.
                 </p>
               </div>
-            </div>
-          ) : (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 flex items-center">
+            </div> : <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 flex items-center">
               <AlertCircle className="h-5 w-5 text-yellow-500 mr-3" />
               <div>
                 <h4 className="text-sm font-medium text-yellow-900">Conta Google não conectada</h4>
@@ -69,8 +60,7 @@ const GoogleConnectionMenu = () => {
                   Conecte sua conta do Google para que possamos acessar as avaliações do seu negócio.
                 </p>
               </div>
-            </div>
-          )}
+            </div>}
           
           <div className="mt-4">
             <p className="text-sm text-gray-600">
@@ -82,18 +72,12 @@ const GoogleConnectionMenu = () => {
       </CardContent>
       
       <CardFooter>
-        {isConnected ? (
-          <Button variant="outline" onClick={handleDisconnect}>
+        {isConnected ? <Button variant="outline" onClick={handleDisconnect}>
             Desconectar conta
-          </Button>
-        ) : (
-          <Button onClick={handleConnect} disabled={isConnecting}>
+          </Button> : <Button onClick={handleConnect} disabled={isConnecting} className="A conex\xE3o do google deve pedir qual e-mail eu vou conectar com google. Depois deve aparecer a lista de empresas relacionadas \xE0 este e-mail e em uma caixa de sele\xE7\xE3o eu poder selecionar qual empresa ser\xE1 vinculada ao sistema.\n\nA partir da\xED o sistema poder\xE1 puxar informa\xE7\xF5es sobre a empresa como:\n\n1. link de avalia\xE7\xE3o\n2. Avalia\xE7\xF5es feitas pelos usu\xE1rios\n3. Nota Inicial, nota Atual e o aumento que teve \n4. E demais informa\xE7\xF5es que o sistema j\xE1 tem devem ser alimentadas por essa conex\xE3o. \n5. Tamb\xE9m quero que o sistema tenha um menu de avalia\xE7\xF5es separado e a possibilidade de responder as usando inteligencia artificial (uma LLM) para as respostas.  ">
             {isConnecting ? "Conectando..." : "Conectar conta Google"}
-          </Button>
-        )}
+          </Button>}
       </CardFooter>
-    </Card>
-  );
+    </Card>;
 };
-
 export default GoogleConnectionMenu;
