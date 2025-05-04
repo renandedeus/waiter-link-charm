@@ -1,25 +1,31 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, Mail, User } from 'lucide-react';
+import { CreditCard, Mail, User, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Esse componente existe apenas para fins de teste e não deve ser usado em produção
 const TestCredentials = () => {
   const [isCreating, setIsCreating] = useState(false);
+  const [message, setMessage] = useState<{text: string, type: 'info' | 'success' | 'error' | null}>({
+    text: '',
+    type: null
+  });
   const { toast } = useToast();
 
   const handleCreateTestUsers = async () => {
     setIsCreating(true);
+    setMessage({ text: 'Criando usuários de teste...', type: 'info' });
     
     try {
       // Chave administrativa para a função (em ambiente de produção, esse botão não estaria disponível)
       const adminKey = 'desenvolvimento-apenas';
       
       toast({
-        title: 'Criando usuários de teste',
+        title: 'Processando',
         description: 'Aguarde enquanto criamos os usuários de teste...',
       });
       
@@ -29,14 +35,22 @@ const TestCredentials = () => {
       });
       
       if (error) {
-        console.error('Erro ao criar usuários de teste:', error);
+        console.error('[Teste] Erro ao criar usuários de teste:', error);
+        setMessage({ 
+          text: `Erro: ${error.message || 'Não foi possível criar os usuários de teste'}`, 
+          type: 'error' 
+        });
         toast({
           title: 'Erro',
           description: `Não foi possível criar os usuários de teste: ${error.message}`,
           variant: 'destructive',
         });
       } else {
-        console.log('Usuários de teste criados:', data);
+        console.log('[Teste] Usuários de teste criados:', data);
+        setMessage({ 
+          text: 'Usuários criados com sucesso! Você pode fazer login agora.', 
+          type: 'success' 
+        });
         toast({
           title: 'Sucesso',
           description: 'Usuários de teste criados com sucesso! Agora você pode fazer login.',
@@ -44,7 +58,11 @@ const TestCredentials = () => {
         });
       }
     } catch (error) {
-      console.error('Erro ao processar a requisição:', error);
+      console.error('[Teste] Erro ao processar a requisição:', error);
+      setMessage({ 
+        text: `Erro: ${error instanceof Error ? error.message : 'Ocorreu um erro desconhecido'}`, 
+        type: 'error' 
+      });
       toast({
         title: 'Erro',
         description: `Ocorreu um erro ao processar a requisição: ${error instanceof Error ? error.message : String(error)}`,
@@ -58,12 +76,21 @@ const TestCredentials = () => {
   return (
     <Card className="max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Credenciais de Teste</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          Credenciais de Teste
+          {isCreating && <RefreshCw className="animate-spin h-4 w-4" />}
+        </CardTitle>
         <CardDescription>
           Use essas credenciais para testar as diferentes interfaces do aplicativo
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {message.text && message.type && (
+          <Alert variant={message.type === 'error' ? 'destructive' : message.type === 'success' ? 'success' : 'info'}>
+            <AlertDescription>{message.text}</AlertDescription>
+          </Alert>
+        )}
+        
         <div className="space-y-1">
           <div className="font-medium flex items-center">
             <User className="mr-2 h-4 w-4" />

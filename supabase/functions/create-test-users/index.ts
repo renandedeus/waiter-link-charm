@@ -17,7 +17,10 @@ serve(async (req) => {
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabaseServiceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    // Create an admin client with service role key for user management 
+    const supabase = createClient(supabaseUrl, supabaseServiceRole);
     
     // Verificar acesso (usando uma chave secreta apenas para esta função)
     // Em ambiente de desenvolvimento, permitimos uma chave fixa para simplificar testes
@@ -35,26 +38,49 @@ serve(async (req) => {
 
     // Remover usuários de teste existentes (para evitar duplicatas)
     try {
+      console.log("Buscando usuários existentes...");
+      const { data: users, error: findError } = await supabase
+        .from('admin_users')
+        .select('email');
+        
+      if (findError) {
+        console.error("Erro ao buscar usuários admin existentes:", findError);
+      }
+      
+      const adminEmail = 'admin@targetavaliacoes.com';
+      const restaurantEmail = 'restaurante@teste.com';
+      
       // Procurar usuários por e-mail
-      const { data: existingUsers } = await supabase
-        .from('auth.users')
-        .select('id, email')
-        .or('email.eq.admin@targetavaliacoes.com,email.eq.restaurante@teste.com');
+      const { data: existingUsers, error: searchError } = await supabase.auth.admin.listUsers();
       
-      console.log("Usuários existentes:", existingUsers);
-      
-      if (existingUsers && existingUsers.length > 0) {
-        for (const user of existingUsers) {
-          console.log(`Removendo usuário existente: ${user.email}`);
-          await supabase.auth.admin.deleteUser(user.id);
+      if (searchError) {
+        console.error("Erro ao listar usuários existentes:", searchError);
+      } else {
+        console.log(`Encontrados ${existingUsers?.users.length || 0} usuários no total`);
+        
+        const adminUser = existingUsers?.users.find(u => u.email === adminEmail);
+        const restaurantUser = existingUsers?.users.find(u => u.email === restaurantEmail);
+        
+        if (adminUser) {
+          console.log(`Removendo usuário admin existente: ${adminEmail} (${adminUser.id})`);
+          await supabase.auth.admin.deleteUser(adminUser.id);
+        }
+        
+        if (restaurantUser) {
+          console.log(`Removendo usuário restaurante existente: ${restaurantEmail} (${restaurantUser.id})`);
+          await supabase.auth.admin.deleteUser(restaurantUser.id);
         }
       }
     } catch (error) {
       console.error('Erro ao verificar usuários existentes:', error);
-      // Continuar mesmo se houver erro na verificação
+      // Continue even if there's an error when checking
     }
 
+    // Create a small delay to ensure users are properly deleted
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     // Criar usuário administrador
+    console.log("Criando usuário administrador...");
     const { data: adminData, error: adminError } = await supabase.auth.admin.createUser({
       email: 'admin@targetavaliacoes.com',
       password: 'admin123',
@@ -69,18 +95,28 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     } else {
-      console.log("Usuário admin criado com sucesso:", adminData.user);
+      console.log("Usuário admin criado com sucesso:", adminData.user.id);
       
       // Inserir na tabela admin_users
-      await supabase.from('admin_users').upsert({
+      const { error: insertError } = await supabase.from('admin_users').upsert({
         id: adminData.user.id,
         email: adminData.user.email,
         name: 'Administrador',
         role: 'admin'
       });
+      
+      if (insertError) {
+        console.error('Erro ao inserir admin na tabela admin_users:', insertError);
+      } else {
+        console.log('Admin inserido na tabela admin_users com sucesso');
+      }
     }
 
+    // Create a small delay before creating the next user
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     // Criar usuário do restaurante
+    console.log("Criando usuário do restaurante...");
     const { data: restaurantData, error: restaurantError } = await supabase.auth.admin.createUser({
       email: 'restaurante@teste.com',
       password: 'teste123',
@@ -95,17 +131,24 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     } else {
-      console.log("Usuário restaurante criado com sucesso:", restaurantData.user);
+      console.log("Usuário restaurante criado com sucesso:", restaurantData.user.id);
       
       // Inserir informações do restaurante em tabela específica
-      await supabase.from('restaurants').upsert({
+      const { error: insertError } = await supabase.from('restaurants').upsert({
         id: restaurantData.user.id,
         name: 'Restaurante Teste',
         owner_name: 'Dono do Restaurante',
         email: restaurantData.user.email,
         subscription_status: 'active',
-        trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 dias a partir de agora
+        trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 dias a partir de agora
+        google_review_url: 'https://g.page/r/CX-xxxxxxx/review' // URL de exemplo para avaliações
       });
+      
+      if (insertError) {
+        console.error('Erro ao inserir dados do restaurante:', insertError);
+      } else {
+        console.log('Dados do restaurante inseridos com sucesso');
+      }
     }
 
     // Return success response

@@ -18,27 +18,30 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'implicit',
-      storage: localStorage, // Garantindo que o localStorage é usado explicitamente
+      storage: localStorage,
     }
   }
 );
 
-// Verificação detalhada da sessão e eventos de autenticação
+// Debug logging for authentication events
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Evento de autenticação:', event);
-  console.log('Detalhes da sessão:', session ? {
+  console.log('[Auth Debug] Event:', event);
+  console.log('[Auth Debug] Session:', session ? {
     user: session.user?.email,
-    auth_token: session.access_token ? 'Presente' : 'Ausente',
-    refresh_token: session.refresh_token ? 'Presente' : 'Ausente',
-    expires_at: session.expires_at
-  } : 'Sem sessão');
+    token_expires: new Date(session.expires_at ? session.expires_at * 1000 : 0).toLocaleString(),
+    hasExpired: session.expires_at ? Date.now() / 1000 > session.expires_at : false
+  } : 'No session');
 });
 
-// Verificação inicial da sessão no carregamento
+// Initial session check
 supabase.auth.getSession().then(({ data, error }) => {
   if (error) {
-    console.error('Erro ao verificar sessão:', error);
+    console.error('[Auth Debug] Error getting session:', error);
   } else {
-    console.log('Status da sessão inicial:', data.session ? 'Autenticado' : 'Não autenticado');
+    console.log('[Auth Debug] Initial session:', data.session ? 'Authenticated' : 'Not authenticated');
+    if (data.session) {
+      console.log('[Auth Debug] User:', data.session.user?.email);
+      console.log('[Auth Debug] Expires at:', new Date(data.session.expires_at * 1000).toLocaleString());
+    }
   }
 });

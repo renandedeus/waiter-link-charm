@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,17 +8,42 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from 'lucide-react';
+import { InfoIcon, Loader } from 'lucide-react';
 import TestCredentials from '@/components/TestCredentials';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const [error, setError] = useState('');
-  const { signIn, checkAdminStatus } = useAuth();
+  const { signIn, checkAdminStatus, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Check if already logged in as admin
+  useEffect(() => {
+    const checkExistingAuth = async () => {
+      setIsChecking(true);
+      if (user) {
+        try {
+          console.log('[Admin] Checking if existing user is admin:', user.email);
+          const isAdmin = await checkAdminStatus();
+          if (isAdmin) {
+            console.log('[Admin] User is admin, redirecting to admin dashboard');
+            navigate('/admin');
+          } else {
+            console.log('[Admin] User is not admin, staying on login page');
+          }
+        } catch (err) {
+          console.error('[Admin] Error checking admin status:', err);
+        }
+      }
+      setIsChecking(false);
+    };
+    
+    checkExistingAuth();
+  }, [user, navigate, checkAdminStatus]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,14 +62,14 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      console.log("Attempting admin login for:", email);
-      const { error } = await signIn(email, password);
+      console.log("[Admin] Attempting admin login for:", email);
+      const { error: signInError } = await signIn(email, password);
       
-      if (error) {
-        console.error("Admin login error details:", error);
+      if (signInError) {
+        console.error("[Admin] Admin login error details:", signInError);
         
-        // Melhor tratamento para erros comuns
-        if (error.message.includes('invalid credentials') || error.message.includes('Invalid login credentials')) {
+        // Better error handling
+        if (signInError.message.includes('invalid credentials') || signInError.message.includes('Invalid login credentials')) {
           setError('Email ou senha incorretos. Verifique suas credenciais e tente novamente.');
           toast({
             title: "Credenciais inválidas",
@@ -52,18 +77,19 @@ const AdminLogin = () => {
             variant: "destructive",
           });
         } else {
-          setError(`Erro no login: ${error.message}`);
+          setError(`Erro no login: ${signInError.message}`);
           toast({
             title: "Erro no login",
-            description: error.message || "Ocorreu um erro durante o login",
+            description: signInError.message || "Ocorreu um erro durante o login",
             variant: "destructive",
           });
         }
       } else {
-        // Verificar se o usuário é um administrador
+        // Check if the user is an administrator
         const isAdmin = await checkAdminStatus();
         
         if (isAdmin) {
+          console.log('[Admin] User confirmed as admin, redirecting to dashboard');
           toast({
             title: "Login bem-sucedido",
             description: "Bem-vindo ao painel administrativo!",
@@ -71,19 +97,18 @@ const AdminLogin = () => {
           });
           navigate('/admin');
         } else {
+          console.log('[Admin] User is not an admin, showing error');
           toast({
             title: "Acesso negado",
             description: "Você não tem permissões de administrador.",
             variant: "destructive",
           });
           
-          // Fazer logout já que não é um administrador
-          await signIn(email, password);
           setError("Você não tem permissões de administrador.");
         }
       }
     } catch (err) {
-      console.error('Error during admin login:', err);
+      console.error('[Admin] Error during admin login:', err);
       setError('Ocorreu um erro ao tentar fazer login');
       toast({
         title: "Erro no login",
@@ -94,6 +119,17 @@ const AdminLogin = () => {
       setIsLoading(false);
     }
   };
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-2">
+          <Loader className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Verificando credenciais...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">

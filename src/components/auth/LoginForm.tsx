@@ -46,13 +46,12 @@ const LoginForm = ({
     setIsLoading(true);
     
     try {
-      console.log("Attempting login for:", email);
+      console.log("[Auth Debug] Attempting login for:", email);
       const { error } = await signIn(email, password);
       
       if (error) {
-        console.error("Login error details:", error);
+        console.error("[Auth Debug] Login error:", error);
         
-        // Melhor tratamento para erros comuns
         if (error.message.includes('invalid credentials') || error.message.includes('Invalid login credentials')) {
           toast({
             title: "Credenciais inválidas",
@@ -73,6 +72,7 @@ const LoginForm = ({
           });
         }
       } else {
+        console.log("[Auth Debug] Login successful, redirecting to dashboard");
         toast({
           title: "Login bem-sucedido",
           description: "Você será redirecionado para o dashboard",
@@ -81,7 +81,7 @@ const LoginForm = ({
         navigate('/dashboard');
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('[Auth Debug] Unexpected login error:', err);
       toast({
         title: "Erro",
         description: 'Ocorreu um erro ao processar sua solicitação',
