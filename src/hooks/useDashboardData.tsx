@@ -35,14 +35,15 @@ export const useDashboardData = () => {
           setWaiters(fetchedWaiters);
           
           const fetchedRestaurant = await getRestaurantInfo(user.id);
+          
+          // Transform data from snake_case (database) to camelCase (app)
           setRestaurant({
             id: fetchedRestaurant.id,
             name: fetchedRestaurant.name,
-            googleReviewUrl: fetchedRestaurant.google_review_url || fetchedRestaurant.googleReviewUrl,
+            googleReviewUrl: fetchedRestaurant.google_review_url || fetchedRestaurant.googleReviewUrl || '',
             responsible_name: fetchedRestaurant.responsible_name,
             responsible_email: fetchedRestaurant.responsible_email,
             responsible_phone: fetchedRestaurant.responsible_phone,
-            // Fix the property access to properly handle both naming conventions
             totalReviews: fetchedRestaurant.totalReviews || fetchedRestaurant.total_reviews,
             initialRating: fetchedRestaurant.initialRating || fetchedRestaurant.initial_rating,
             currentRating: fetchedRestaurant.currentRating || fetchedRestaurant.current_rating,
@@ -123,7 +124,7 @@ export const useDashboardData = () => {
     try {
       const updatedRestaurant = await setRestaurantInfo(name, googleReviewUrl);
       
-      // Transform to match app's Restaurant model
+      // Transform data from snake_case (database) to camelCase (app)
       const restaurant = {
         id: updatedRestaurant.id,
         name: updatedRestaurant.name,
