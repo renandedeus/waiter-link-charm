@@ -5,8 +5,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckCircle, Info } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle, Info, Loader2, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import StripePaymentForm from '@/components/StripePaymentForm';
+
+interface PaymentResponse {
+  clientSecret: string;
+  customerId: string;
+  paymentType: 'payment' | 'subscription';
+  priceId?: string;
+  amount: number;
+}
 
 const PaymentGateway = () => {
   const navigate = useNavigate();
@@ -15,7 +25,8 @@ const PaymentGateway = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('mensal');
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [activeTab, setActiveTab] = useState('select-plan');
+  const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null);
   const canceled = searchParams.get('canceled') === 'true';
 
   useEffect(() => {
@@ -28,11 +39,11 @@ const PaymentGateway = () => {
     }
   }, [canceled, toast]);
 
-  const handleStripeCheckout = async (planType) => {
+  const handleCreatePaymentIntent = async (planType: string) => {
     setIsProcessing(true);
     
     try {
-      console.log('Iniciando checkout para plano:', planType);
+      console.log('Iniciando processo de pagamento para plano:', planType);
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { planType }
       });
@@ -44,26 +55,40 @@ const PaymentGateway = () => {
       
       console.log('Resposta da função create-subscription:', data);
       
-      if (data?.url) {
-        setIsRedirecting(true);
-        console.log('Redirecionando para URL:', data.url);
-        // Pequeno delay antes do redirecionamento para garantir que o estado seja atualizado
-        setTimeout(() => {
-          window.location.href = data.url;
-        }, 500);
+      if (data?.clientSecret) {
+        setPaymentResponse(data);
+        setActiveTab('payment');
       } else {
-        throw new Error('Não foi possível obter o link de pagamento');
+        throw new Error('Não foi possível obter os dados de pagamento');
       }
     } catch (error) {
-      console.error('Erro ao redirecionar para o Stripe:', error);
+      console.error('Erro ao criar intent de pagamento:', error);
       toast({
         title: "Erro no processamento",
         description: error.message || "Ocorreu um erro ao processar sua solicitação de pagamento",
         variant: "destructive",
       });
+    } finally {
       setIsProcessing(false);
-      setIsRedirecting(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsSuccess(true);
+    toast({
+      title: "Pagamento bem-sucedido",
+      description: "Seu pagamento foi processado com sucesso!",
+      variant: "default",
+    });
+    
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 2000);
+  };
+
+  const handleCancel = () => {
+    setPaymentResponse(null);
+    setActiveTab('select-plan');
   };
 
   const planDetails = [
@@ -118,83 +143,132 @@ const PaymentGateway = () => {
                   Você será redirecionado para o dashboard automaticamente...
                 </p>
               </div>
-            ) : isRedirecting ? (
-              <div className="text-center py-6 space-y-4">
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                </div>
-                <h3 className="text-xl font-medium">Redirecionando para o checkout...</h3>
-                <p className="text-gray-600">
-                  Você está sendo redirecionado para nossa plataforma de pagamento segura.
-                </p>
-              </div>
             ) : (
-              <>
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium mb-4">Escolha seu plano</h3>
-                  <RadioGroup 
-                    defaultValue="mensal" 
-                    value={selectedPlan}
-                    onValueChange={setSelectedPlan} 
-                    className="grid gap-4 grid-cols-1 md:grid-cols-3"
-                  >
-                    {planDetails.map(plan => (
-                      <div key={plan.id} className={`relative rounded-lg border p-4 ${plan.recommended ? 'ring-2 ring-primary' : ''}`}>
-                        {plan.recommended && (
-                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
-                            Mais popular
-                          </div>
-                        )}
-                        <RadioGroupItem 
-                          value={plan.id} 
-                          id={plan.id}
-                          className="absolute right-4 top-4"
-                        />
-                        <div className="mb-2">
-                          <h4 className="font-medium">{plan.name}</h4>
-                          <div className="mt-1">
-                            <span className="text-2xl font-bold">{plan.price}</span>
-                            <span className="text-gray-500 text-sm"> {plan.billingCycle}</span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="select-plan" disabled={activeTab === 'payment'}>
+                    Escolher Plano
+                  </TabsTrigger>
+                  <TabsTrigger value="payment" disabled={!paymentResponse || activeTab !== 'payment'}>
+                    Pagamento
+                  </TabsTrigger>
+                </TabsList>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-                  <div className="flex items-start">
-                    <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-blue-800">
-                        <strong>Importante:</strong> Você será redirecionado para o nosso gateway de pagamento seguro para finalizar sua transação.
-                      </p>
+                <TabsContent value="select-plan" className="space-y-4 mt-4">
+                  <div className="mb-8">
+                    <h3 className="text-lg font-medium mb-4">Escolha seu plano</h3>
+                    <RadioGroup 
+                      defaultValue="mensal" 
+                      value={selectedPlan}
+                      onValueChange={setSelectedPlan} 
+                      className="grid gap-4 grid-cols-1 md:grid-cols-3"
+                    >
+                      {planDetails.map(plan => (
+                        <div key={plan.id} className={`relative rounded-lg border p-4 ${plan.recommended ? 'ring-2 ring-primary' : ''}`}>
+                          {plan.recommended && (
+                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
+                              Mais popular
+                            </div>
+                          )}
+                          <RadioGroupItem 
+                            value={plan.id} 
+                            id={plan.id}
+                            className="absolute right-4 top-4"
+                          />
+                          <div className="mb-2">
+                            <h4 className="font-medium">{plan.name}</h4>
+                            <div className="mt-1">
+                              <span className="text-2xl font-bold">{plan.price}</span>
+                              <span className="text-gray-500 text-sm"> {plan.billingCycle}</span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                    <div className="flex items-start">
+                      <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-blue-800">
+                          <strong>Importante:</strong> Ao prosseguir, você será solicitado a fornecer seus dados de pagamento de forma segura.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                  
+                  <Button 
+                    onClick={() => handleCreatePaymentIntent(selectedPlan)} 
+                    className="w-full mt-6" 
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Continuar para o Pagamento
+                      </>
+                    )}
+                  </Button>
+                </TabsContent>
                 
-                <Button 
-                  onClick={() => handleStripeCheckout(selectedPlan)} 
-                  className="w-full mt-6" 
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? "Processando..." : "Continuar para o Pagamento"}
-                </Button>
-                
-                <p className="text-xs text-center text-gray-500 mt-4">
-                  Suas informações de pagamento estão seguras e criptografadas.
-                </p>
-              </>
+                <TabsContent value="payment" className="space-y-4 mt-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                    <div className="flex items-start">
+                      <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-blue-800">
+                          <strong>Pagamento Seguro:</strong> Seus dados de cartão são criptografados e processados diretamente pelo Stripe, não armazenamos informações sensíveis.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-lg p-6">
+                    <h3 className="text-lg font-medium mb-4">
+                      {selectedPlan === 'mensal' ? 'Plano Mensal' : 
+                       selectedPlan === 'semestral' ? 'Plano Semestral' : 'Plano Anual'}
+                    </h3>
+                    
+                    <p className="text-sm text-gray-600 mb-6">
+                      {selectedPlan === 'mensal' 
+                        ? 'Pagamento mensal recorrente de R$ 97,00'
+                        : selectedPlan === 'semestral'
+                        ? 'Pagamento único em 6x de R$ 87,00 (R$ 522,00)'
+                        : 'Pagamento único em 6x de R$ 49,90 (R$ 299,40)'}
+                    </p>
+                    
+                    {paymentResponse && (
+                      <StripePaymentForm
+                        clientSecret={paymentResponse.clientSecret}
+                        paymentType={paymentResponse.paymentType}
+                        amount={paymentResponse.amount}
+                        planType={selectedPlan}
+                        priceId={paymentResponse.priceId}
+                        onPaymentSuccess={handlePaymentSuccess}
+                        onCancel={handleCancel}
+                      />
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             )}
           </CardContent>
           
           <CardFooter className="flex justify-center">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-auto">
-                <img src="/placeholder.svg" alt="Secure Payment" className="h-full" />
-              </div>
-              <p className="text-xs text-gray-500">Pagamento seguro e criptografado</p>
+              <img 
+                src="https://cdn.jsdelivr.net/gh/lipis/flag-icons/flags/1x1/br.svg" 
+                alt="Brazil flag" 
+                className="w-5 h-5" 
+              />
+              <p className="text-xs text-gray-500">Pagamento processado em Real Brasileiro (BRL)</p>
             </div>
           </CardFooter>
         </Card>

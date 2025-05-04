@@ -82,73 +82,91 @@ serve(async (req) => {
       console.log("Novo cliente criado:", customerId);
     }
     
-    // Configurar os parâmetros da sessão de checkout com base no tipo de plano
-    let priceData, mode;
+    // Configurar os valores com base no tipo de plano
+    let amount, description, paymentType, interval;
     
     console.log("Configurando dados do plano:", planType);
     switch(planType) {
       case "mensal":
-        priceData = {
-          currency: "brl",
-          product_data: { name: "Plano Mensal - Waiter Link" },
-          unit_amount: 9700, // R$97,00
-          recurring: { interval: "month" }
-        };
-        mode = "subscription";
+        amount = 9700; // R$97,00
+        description = "Plano Mensal - Waiter Link";
+        paymentType = "subscription";
+        interval = "month";
         break;
       case "semestral":
-        priceData = {
-          currency: "brl",
-          product_data: { name: "Plano Semestral - Waiter Link" },
-          unit_amount: 52200, // R$522,00 (R$87,00 x 6)
-        };
-        mode = "payment";
+        amount = 52200; // R$522,00
+        description = "Plano Semestral - Waiter Link (6x R$87,00)";
+        paymentType = "payment";
         break;
       case "anual":
-        priceData = {
-          currency: "brl",
-          product_data: { name: "Plano Anual - Waiter Link" },
-          unit_amount: 29940, // R$299,40 (R$49,90 x 6)
-        };
-        mode = "payment";
+        amount = 29940; // R$299,40
+        description = "Plano Anual - Waiter Link (6x R$49,90)";
+        paymentType = "payment";
         break;
     }
     
-    // Obter origem da requisição ou usar fallback
-    const origin = req.headers.get("origin") || "https://waiterlink.app";
+    let paymentResponse;
     
-    // Criar uma sessão de checkout do Stripe
-    console.log("Criando sessão de checkout...");
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: priceData,
-          quantity: 1,
+    if (paymentType === "subscription") {
+      // Criar um produto e um preço para a assinatura
+      const product = await stripe.products.create({
+        name: description,
+        metadata: {
+          user_id: user.id,
+          plan_type: planType
+        }
+      });
+      
+      const price = await stripe.prices.create({
+        product: product.id,
+        unit_amount: amount,
+        currency: "brl",
+        recurring: { interval }
+      });
+      
+      // Criar uma intent de configuração de assinatura
+      const setupIntent = await stripe.setupIntents.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        metadata: {
+          user_id: user.id,
+          plan_type: planType,
+          price_id: price.id
+        }
+      });
+      
+      paymentResponse = {
+        clientSecret: setupIntent.client_secret,
+        customerId,
+        paymentType: "subscription",
+        priceId: price.id,
+        amount
+      };
+    } else {
+      // Criar intent de pagamento para pagamentos únicos
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: "brl",
+        customer: customerId,
+        description,
+        metadata: {
+          user_id: user.id,
+          plan_type: planType
         },
-      ],
-      mode: mode,
-      success_url: `${origin}/dashboard?payment_success=true&plan=${planType}`,
-      cancel_url: `${origin}/payment-gateway?canceled=true`,
-      payment_intent_data: mode === "payment" ? {
-        metadata: {
-          user_id: user.id,
-          plan_type: planType
+        automatic_payment_methods: {
+          enabled: true
         }
-      } : undefined,
-      subscription_data: mode === "subscription" ? {
-        metadata: {
-          user_id: user.id,
-          plan_type: planType
-        }
-      } : undefined,
-    });
+      });
+      
+      paymentResponse = {
+        clientSecret: paymentIntent.client_secret,
+        customerId,
+        paymentType: "payment",
+        amount
+      };
+    }
     
-    console.log("Sessão de checkout criada:", session.id);
-    console.log("URL de checkout:", session.url);
-    
-    // Registrar cliente e sessão no serviço de registro do Supabase
+    // Registrar cliente e intenção de pagamento no banco de dados
     console.log("Registrando assinante no banco de dados...");
     const supabaseServiceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -166,7 +184,7 @@ serve(async (req) => {
     }, { onConflict: 'user_id' });
     console.log("Assinante registrado com sucesso");
     
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify(paymentResponse), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
