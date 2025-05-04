@@ -20,10 +20,11 @@ export const usePaymentProcess = (userId: string | undefined) => {
 
   // Check if Stripe key is available (for debugging)
   const checkStripeKey = () => {
-    const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    // Agora vamos verificar se a chave está definida diretamente no StripePaymentForm
+    const stripeKey = 'pk_live_51QsRHwQ1OA5iIhkTsFOcfyvuSOLO47x407njqPNpBH2NvJcm8fGzDqeu0c9dnusvYVOdGL41N0plEMMhdznuwjKn00Im4e51uk';
     if (!stripeKey) {
-      setDebugInfo('Chave pública do Stripe não encontrada. Verifique a variável de ambiente VITE_STRIPE_PUBLIC_KEY.');
-      console.error('Stripe public key not found in environment variables');
+      setDebugInfo('Chave pública do Stripe não encontrada.');
+      console.error('Stripe public key not found');
       return false;
     } else {
       console.log('Stripe public key is configured');
