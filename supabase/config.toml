@@ -1,5 +1,28 @@
 
 project_id = "fgpsfqjellkukgnqhmdh"
 
-[functions.create-admin]
-verify_jwt = false
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+
+[db]
+port = 54322
+
+[auth]
+port = 54323
+
+[realtime]
+enabled = false
+
+[studio]
+port = 54324
+
+[storage]
+enabled = false
+
+[functions.create-subscription]
+verify_jwt = true
+
+[functions.check-subscription]
+verify_jwt = true

@@ -1,86 +1,68 @@
 
-import { useState } from 'react';
+import React from 'react';
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Home, Users, LogOut, Menu, Check } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
+import { Home, Edit, Users, LogOut } from 'lucide-react';
 
 interface SidebarProps {
-  activePage: 'dashboard' | 'waiters';
-  onNavigate: (page: 'dashboard' | 'waiters') => void;
+  activePage: 'dashboard' | 'waiters' | 'google';
+  onNavigate: (page: 'dashboard' | 'waiters' | 'google') => void;
 }
 
-export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
   const { signOut } = useAuth();
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
+
   return (
-    <div className={cn(
-      "h-screen bg-sidebar border-r border-gray-200 transition-all duration-300 flex flex-col",
-      collapsed ? "w-16" : "w-64"
-    )}>
-      <div className="flex items-center p-4">
-        {!collapsed && <h1 className="text-xl font-bold flex-1">Target Avaliações</h1>}
-        <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
-          <Menu className="h-5 w-5" />
-        </Button>
+    <div className="w-64 bg-white shadow-md h-screen flex flex-col">
+      <div className="p-4 border-b">
+        <h2 className="text-xl font-bold">Waiter Link</h2>
+        <p className="text-sm text-gray-500">Gerencie avaliações e desempenho</p>
       </div>
-      
-      <div className="p-4 mb-2">
-        <div className={cn(
-          "bg-green-50 border border-green-200 rounded-lg p-2 text-xs text-green-700",
-          collapsed && "hidden"
-        )}>
-          <div className="flex items-center">
-            <Check className="h-4 w-4 text-green-500 mr-1" />
-            <span className="font-medium">Plano Ativo</span>
-          </div>
-          <div className="mt-1">14 dias gratuitos</div>
-        </div>
+      <div className="p-4 flex-1">
+        <nav className="space-y-2">
+          <Button
+            variant={activePage === 'dashboard' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => onNavigate('dashboard')}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            Painel
+          </Button>
+          <Button
+            variant={activePage === 'waiters' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => onNavigate('waiters')}
+          >
+            <Users className="mr-2 h-4 w-4" />
+            Garçons
+          </Button>
+          <Button
+            variant={activePage === 'google' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => onNavigate('google')}
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Conexão Google
+          </Button>
+        </nav>
       </div>
-      
-      <nav className="flex-1 p-2">
-        <ul className="space-y-2">
-          <li>
-            <Button
-              variant={activePage === 'dashboard' ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start",
-                collapsed && "justify-center"
-              )}
-              onClick={() => onNavigate('dashboard')}
-            >
-              <Home className="h-5 w-5 mr-2" />
-              {!collapsed && <span>Painel</span>}
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant={activePage === 'waiters' ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start",
-                collapsed && "justify-center"
-              )}
-              onClick={() => onNavigate('waiters')}
-            >
-              <Users className="h-5 w-5 mr-2" />
-              {!collapsed && <span>Garçons</span>}
-            </Button>
-          </li>
-        </ul>
-      </nav>
-      
-      <div className="p-4 border-t border-gray-200">
-        <Button 
-          variant="ghost" 
-          className={cn(
-            "w-full justify-start",
-            collapsed && "justify-center"
-          )}
-          onClick={() => signOut()}
+      <div className="p-4 border-t mt-auto">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50"
+          onClick={handleSignOut}
         >
-          <LogOut className="h-5 w-5 mr-2" />
-          {!collapsed && <span>Sair</span>}
+          <LogOut className="mr-2 h-4 w-4" />
+          Sair
         </Button>
       </div>
     </div>

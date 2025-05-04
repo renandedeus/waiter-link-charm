@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { RestaurantForm } from '@/components/RestaurantForm';
 import { WaiterForm } from '@/components/WaiterForm';
@@ -12,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/contexts/AuthContext';
 import { Waiter, Restaurant, Review } from '@/types';
 import { useToast } from "@/components/ui/use-toast";
+import WelcomeVideoModal from '@/components/WelcomeVideoModal';
+import GoogleConnectionMenu from '@/components/GoogleConnectionMenu';
 import { 
   createWaiter, 
   deleteWaiter, 
@@ -20,15 +23,37 @@ import {
   setRestaurantInfo,
   initializeSampleData
 } from '@/services/waiterService';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
-  const [activePage, setActivePage] = useState<'dashboard' | 'waiters'>('dashboard');
+  const [searchParams] = useSearchParams();
+  const [activePage, setActivePage] = useState<'dashboard' | 'waiters' | 'google'>('dashboard');
   const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'leaderboard' | 'reviews'>('overview');
   const [waiters, setWaiters] = useState<Waiter[]>([]);
   const [restaurant, setRestaurant] = useState<Restaurant>({ id: '', name: '', googleReviewUrl: '' });
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showWelcomeVideo, setShowWelcomeVideo] = useState<boolean>(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+  
   const auth = useAuth();
   const { toast } = useToast();
+  
+  const paymentSuccess = searchParams.get('payment_success') === 'true';
+  const selectedPlan = searchParams.get('plan');
+  
+  // Verificar se o usuário está chegando após um pagamento bem-sucedido
+  useEffect(() => {
+    if (paymentSuccess) {
+      setShowWelcomeVideo(true);
+      if (selectedPlan) {
+        toast({
+          title: `Plano ${selectedPlan} ativado com sucesso!`,
+          description: "Seu pagamento foi processado com sucesso. Aproveite todos os recursos do Waiter Link!",
+          variant: "success",
+        });
+      }
+    }
+  }, [paymentSuccess, selectedPlan, toast]);
   
   useEffect(() => {
     // Inicializar dados de exemplo para desenvolvimento
@@ -43,6 +68,14 @@ const Dashboard = () => {
         
         const fetchedRestaurant = await getRestaurantInfo();
         setRestaurant(fetchedRestaurant);
+        
+        // Verificar status da assinatura
+        if (auth.user) {
+          const { data, error } = await supabase.functions.invoke('check-subscription');
+          if (!error && data) {
+            setSubscriptionStatus(data);
+          }
+        }
       } catch (error) {
         console.error('Erro ao inicializar dados:', error);
         toast({
@@ -56,7 +89,7 @@ const Dashboard = () => {
     };
 
     initData();
-  }, [toast]);
+  }, [toast, auth.user]);
 
   const handleAddWaiter = async (name: string, email: string, whatsapp: string): Promise<Waiter> => {
     try {
@@ -123,6 +156,10 @@ const Dashboard = () => {
       };
     });
   };
+  
+  const handleCloseVideoModal = () => {
+    setShowWelcomeVideo(false);
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -133,7 +170,7 @@ const Dashboard = () => {
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto p-4 md:p-6 space-y-6">
           <h1 className="text-2xl font-bold">
-            {activePage === 'dashboard' ? 'Painel' : 'Gerenciar Garçons'}
+            {activePage === 'dashboard' ? 'Painel' : activePage === 'waiters' ? 'Gerenciar Garçons' : 'Conexão Google'}
           </h1>
           
           {isLoading ? (
@@ -169,6 +206,30 @@ const Dashboard = () => {
                           </div>
                         </div>
                       )}
+                      
+                      {subscriptionStatus && (
+                        <div className="mt-6">
+                          <h2 className="text-lg font-medium mb-2">Status da Assinatura</h2>
+                          <div className={`bg-white p-4 rounded-md border ${
+                            subscriptionStatus.isSubscribed ? 'border-green-300' : 'border-yellow-300'
+                          }`}>
+                            <p className="font-medium">
+                              {subscriptionStatus.isSubscribed ? 'Assinatura Ativa' : 'Sem Assinatura Ativa'}
+                            </p>
+                            {subscriptionStatus.plan && (
+                              <p className="text-sm text-gray-600">
+                                Plano: {subscriptionStatus.plan === 'mensal' ? 'Mensal' : 
+                                        subscriptionStatus.plan === 'semestral' ? 'Semestral' : 'Anual'}
+                              </p>
+                            )}
+                            {subscriptionStatus.ends_at && (
+                              <p className="text-sm text-gray-600">
+                                Válido até: {new Date(subscriptionStatus.ends_at).toLocaleDateString('pt-BR')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </TabsContent>
                     
                     <TabsContent value="metrics" className="pt-4">
@@ -198,10 +259,22 @@ const Dashboard = () => {
                   </div>
                 </>
               )}
+              
+              {activePage === 'google' && (
+                <div className="mt-6">
+                  <GoogleConnectionMenu />
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
+      
+      <WelcomeVideoModal 
+        videoId="Z26ueJM-EGM" 
+        isOpen={showWelcomeVideo} 
+        onClose={handleCloseVideoModal} 
+      />
     </div>
   );
 };
