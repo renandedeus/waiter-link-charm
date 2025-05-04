@@ -90,7 +90,7 @@ const UserSettings = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium">Status</p>
-                  <Badge variant={subscription.status === 'active' ? 'success' : 'destructive'}>
+                  <Badge variant={subscription.status === 'active' ? 'secondary' : 'destructive'}>
                     {subscription.status === 'active' ? 'Ativo' : 'Inativo'}
                   </Badge>
                 </div>
