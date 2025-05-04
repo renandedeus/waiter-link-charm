@@ -1,19 +1,14 @@
 export interface Waiter {
   id: string;
-  restaurant_id: string;
+  trackingId: string;
+  restaurantId: string;
   name: string;
   email: string;
   whatsapp: string;
-  tracking_token: string;
-  token_expiry_date?: string;
+  trackingLink: string;
+  qrCodeUrl: string;
   clicks: number;
-  conversions?: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  trackingLink?: string; // computed field
-  qrCodeUrl?: string; // computed field
-  isTopPerformer?: boolean; // computed field
+  createdAt: string;
 }
 
 export interface Restaurant {
