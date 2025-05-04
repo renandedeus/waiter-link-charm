@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Waiter, LeaderboardEntry, MonthlyChampion } from '@/types';
+import { Waiter, LeaderboardEntry, MonthlyChampion, Restaurant } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Waiter management functions
@@ -51,7 +51,7 @@ export const createWaiter = async (waiterData: {
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(trackingLink)}`;
     
     // Insert into database with database model structure
-    const { error } = await supabase.from('waiters').insert({
+    const { data, error } = await supabase.from('waiters').insert({
       id,
       name: waiterData.name,
       email: waiterData.email,
@@ -61,7 +61,7 @@ export const createWaiter = async (waiterData: {
       clicks: 0,
       conversions: 0,
       is_active: true
-    });
+    }).select();
     
     if (error) throw error;
     
@@ -161,7 +161,7 @@ export const updateRestaurantFeedback = async (
   }
 };
 
-export const getRestaurantInfo = async (restaurantId?: string): Promise<any> => {
+export const getRestaurantInfo = async (restaurantId?: string): Promise<Restaurant> => {
   try {
     let id = restaurantId;
     
@@ -181,7 +181,7 @@ export const getRestaurantInfo = async (restaurantId?: string): Promise<any> => 
     if (error) throw error;
     
     // Transform to match app's Restaurant model
-    const restaurant = {
+    const restaurant: Restaurant = {
       id: data.id,
       name: data.name,
       googleReviewUrl: data.google_review_url,
@@ -257,18 +257,9 @@ export const getTotalConversions = async (restaurantId?: string): Promise<number
 };
 
 // Leaderboard functions
-export const getCurrentLeaderboard = async (restaurantId?: string): Promise<LeaderboardEntry[]> => {
+export const getCurrentLeaderboard = async (restaurantId: string): Promise<LeaderboardEntry[]> => {
   try {
-    let id = restaurantId;
-    
-    if (!id) {
-      const { data: user } = await supabase.auth.getUser();
-      id = user.user?.id;
-      
-      if (!id) throw new Error("User not authenticated");
-    }
-    
-    const waiters = await getWaiters(id);
+    const waiters = await getWaiters(restaurantId);
     
     // Sort by clicks and add position
     const sortedWaiters = [...waiters].sort((a, b) => b.clicks - a.clicks);
@@ -285,21 +276,12 @@ export const getCurrentLeaderboard = async (restaurantId?: string): Promise<Lead
   }
 };
 
-export const getMonthlyChampions = async (restaurantId?: string): Promise<MonthlyChampion[]> => {
+export const getMonthlyChampions = async (restaurantId: string): Promise<MonthlyChampion[]> => {
   try {
-    let id = restaurantId;
-    
-    if (!id) {
-      const { data: user } = await supabase.auth.getUser();
-      id = user.user?.id;
-      
-      if (!id) throw new Error("User not authenticated");
-    }
-    
     const { data, error } = await supabase
       .from('monthly_champions')
       .select('*')
-      .eq('restaurant_id', id)
+      .eq('restaurant_id', restaurantId)
       .order('year', { ascending: false })
       .order('month', { ascending: false })
       .limit(12);
@@ -319,11 +301,11 @@ export const getDaysUntilEndOfMonth = (): number => {
 };
 
 // For dashboard initialization
-export const getAllWaiters = async (restaurantId?: string): Promise<Waiter[]> => {
-  return getWaiters(restaurantId || '');
+export const getAllWaiters = async (restaurantId: string): Promise<Waiter[]> => {
+  return getWaiters(restaurantId);
 };
 
-export const initializeSampleData = async (restaurantId?: string): Promise<void> => {
+export const initializeSampleData = async (restaurantId: string): Promise<void> => {
   // This function would create sample data for new restaurants
   // Implementation depends on your requirements
   console.log('Initializing sample data for restaurant:', restaurantId);

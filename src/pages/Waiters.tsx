@@ -37,9 +37,11 @@ const Waiters = () => {
     fetchWaiters();
   }, [user, toast]);
 
-  const handleAddWaiter = async (name: string, email: string, whatsapp: string) => {
+  const handleAddWaiter = async (name: string, email: string, whatsapp: string): Promise<Waiter> => {
     try {
-      if (!user?.id) return Promise.reject("Usuário não autenticado");
+      if (!user?.id) {
+        throw new Error("Usuário não autenticado");
+      }
       
       const newWaiter = await createWaiter({
         name,
@@ -57,6 +59,11 @@ const Waiters = () => {
       return newWaiter;
     } catch (error) {
       console.error('Erro ao adicionar garçom:', error);
+      toast({
+        title: "Erro ao adicionar garçom",
+        description: "Ocorreu um problema ao tentar adicionar o garçom.",
+        variant: "destructive",
+      });
       throw error;
     }
   };

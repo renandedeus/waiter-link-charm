@@ -10,8 +10,8 @@ export interface Waiter {
   qrCodeUrl: string;
   clicks: number;
   createdAt: string;
-  conversions?: number;
-  isActive?: boolean;
+  conversions: number;
+  isActive: boolean;
 }
 
 export interface Restaurant {

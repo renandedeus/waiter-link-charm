@@ -4,8 +4,6 @@ import { Waiter } from '@/types';
 import { WaiterForm } from '@/components/WaiterForm';
 import { WaiterList } from '@/components/WaiterList';
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { createWaiter, deleteWaiter } from '@/services/waiterService';
 
 interface WaiterManagementProps {
   waiters: Waiter[];
@@ -33,7 +31,7 @@ const WaiterManagement: React.FC<WaiterManagementProps> = ({
         description: "Ocorreu um problema ao tentar adicionar o garçom. Por favor, tente novamente.",
         variant: "destructive",
       });
-      return undefined;
+      throw error; // Re-throw for proper error handling in WaiterForm
     } finally {
       setIsSubmitting(false);
     }
