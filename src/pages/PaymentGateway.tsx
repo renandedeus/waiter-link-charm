@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StripePaymentForm from '@/components/StripePaymentForm';
+import { logAccess } from '@/contexts/auth/utils';
 
 interface PaymentResponse {
   clientSecret: string;
@@ -52,6 +52,9 @@ const PaymentGateway = () => {
         throw new Error("Sessão de usuário não encontrada. Faça login novamente.");
       }
       
+      // Log do acesso para fins de auditoria
+      await logAccess('payment_attempt', session.data.session.user.id);
+      
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { planType }
       });
@@ -66,6 +69,7 @@ const PaymentGateway = () => {
       if (data?.clientSecret) {
         setPaymentResponse(data);
         setActiveTab('payment');
+        console.log('Redirecionando para a aba de pagamento com clientSecret:', data.clientSecret);
       } else if (data?.error) {
         throw new Error(data.error);
       } else {
