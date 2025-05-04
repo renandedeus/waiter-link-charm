@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Info, Loader2, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StripePaymentForm from '@/components/StripePaymentForm';
-import { logAccess } from '@/contexts/auth/utils';
-import { useAuth } from '@/contexts/auth';
 
 interface PaymentResponse {
   clientSecret: string;
@@ -23,7 +22,6 @@ const PaymentGateway = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('mensal');
@@ -33,24 +31,6 @@ const PaymentGateway = () => {
   const canceled = searchParams.get('canceled') === 'true';
 
   useEffect(() => {
-    // Log ao carregar a página
-    const logPageView = async () => {
-      if (user) {
-        await logAccess('payment_page_view', user.id);
-        console.log("Página de pagamento visualizada pelo usuário:", user.email);
-      } else {
-        console.log("Página de pagamento visualizada por usuário não autenticado");
-        toast({
-          title: "Não autenticado",
-          description: "Você precisa fazer login para acessar esta página",
-          variant: "destructive",
-        });
-        navigate('/');
-      }
-    };
-    
-    logPageView();
-    
     if (canceled) {
       toast({
         title: "Pagamento cancelado",
@@ -58,7 +38,7 @@ const PaymentGateway = () => {
         variant: "destructive",
       });
     }
-  }, [canceled, toast, user, navigate]);
+  }, [canceled, toast]);
 
   const handleCreatePaymentIntent = async (planType: string) => {
     setIsProcessing(true);
@@ -66,23 +46,11 @@ const PaymentGateway = () => {
     
     try {
       console.log('Iniciando processo de pagamento para plano:', planType);
-      
       const session = await supabase.auth.getSession();
       
       if (!session?.data.session) {
-        console.error("Sessão não encontrada. Usuário não está autenticado.");
-        toast({
-          title: "Sessão expirada",
-          description: "Sua sessão expirou. Por favor, faça login novamente.",
-          variant: "destructive",
-        });
-        navigate('/');
-        return;
+        throw new Error("Sessão de usuário não encontrada. Faça login novamente.");
       }
-      
-      // Log do acesso para fins de auditoria
-      await logAccess('payment_attempt', session.data.session.user.id);
-      console.log("Usuário tentando criar intenção de pagamento:", session.data.session.user.email);
       
       const { data, error } = await supabase.functions.invoke('create-subscription', {
         body: { planType }
@@ -91,22 +59,16 @@ const PaymentGateway = () => {
       console.log('Resposta da função create-subscription:', data);
       
       if (error) {
-        console.error('Erro na invocação da função create-subscription:', error);
+        console.error('Erro na invocação da função:', error);
         throw new Error(error.message || 'Erro ao processar pagamento');
       }
       
       if (data?.clientSecret) {
         setPaymentResponse(data);
         setActiveTab('payment');
-        console.log('Redirecionando para a aba de pagamento com clientSecret:', data.clientSecret);
-        
-        // Log de sucesso na criação da intenção de pagamento
-        await logAccess('payment_intent_created', session.data.session.user.id);
       } else if (data?.error) {
-        console.error('Erro retornado pela função:', data.error);
         throw new Error(data.error);
       } else {
-        console.error('Dados de pagamento não retornados pela função');
         throw new Error('Não foi possível obter os dados de pagamento');
       }
     } catch (error: any) {
@@ -130,11 +92,6 @@ const PaymentGateway = () => {
         description: errorMessage,
         variant: "destructive",
       });
-      
-      // Registrar o erro
-      if (user) {
-        await logAccess(`payment_error: ${errorMessage.substring(0, 50)}`, user.id);
-      }
     } finally {
       setIsProcessing(false);
     }
@@ -148,18 +105,19 @@ const PaymentGateway = () => {
       variant: "default",
     });
     
-    // Registrar o sucesso do pagamento
-    const logSuccess = async () => {
-      if (user) {
-        await logAccess('payment_success', user.id);
-      }
-    };
-    
-    logSuccess();
-    
     setTimeout(() => {
       navigate('/dashboard');
     }, 2000);
+  };
+
+  const handleCancel = () => {
+    setPaymentResponse(null);
+    setActiveTab('select-plan');
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    // Para casos em que quisermos tentar novamente sem mudar o plano
   };
 
   const planDetails = [
@@ -188,7 +146,7 @@ const PaymentGateway = () => {
       recommended: true
     }
   ];
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-4xl">
@@ -241,7 +199,7 @@ const PaymentGateway = () => {
                             variant="outline" 
                             size="sm" 
                             className="mt-2 text-xs" 
-                            onClick={() => setError(null)}
+                            onClick={handleRetry}
                           >
                             Tentar novamente
                           </Button>
@@ -258,58 +216,28 @@ const PaymentGateway = () => {
                       onValueChange={setSelectedPlan} 
                       className="grid gap-4 grid-cols-1 md:grid-cols-3"
                     >
-                      <div className={`relative rounded-lg border p-4 ${selectedPlan === 'mensal' ? 'ring-2 ring-primary' : ''}`}>
-                        {selectedPlan === 'mensal' && (
-                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
-                            Recomendado
+                      {planDetails.map(plan => (
+                        <div key={plan.id} className={`relative rounded-lg border p-4 ${plan.recommended ? 'ring-2 ring-primary' : ''}`}>
+                          {plan.recommended && (
+                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
+                              Mais popular
+                            </div>
+                          )}
+                          <RadioGroupItem 
+                            value={plan.id} 
+                            id={plan.id}
+                            className="absolute right-4 top-4"
+                          />
+                          <div className="mb-2">
+                            <h4 className="font-medium">{plan.name}</h4>
+                            <div className="mt-1">
+                              <span className="text-2xl font-bold">{plan.price}</span>
+                              <span className="text-gray-500 text-sm"> {plan.billingCycle}</span>
+                            </div>
                           </div>
-                        )}
-                        <RadioGroupItem 
-                          value="mensal" 
-                          id="mensal"
-                          className="absolute right-4 top-4"
-                        />
-                        <div className="mb-2">
-                          <h4 className="font-medium">Plano Mensal</h4>
-                          <div className="mt-1">
-                            <span className="text-2xl font-bold">R$ 49,90</span>
-                            <span className="text-gray-500 text-sm"> por mês</span>
-                          </div>
+                          <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
                         </div>
-                        <p className="text-sm text-gray-600 mt-2">Pagamento mensal recorrente</p>
-                      </div>
-                      
-                      <div className={`relative rounded-lg border p-4 ${selectedPlan === 'trimestral' ? 'ring-2 ring-primary' : ''}`}>
-                        <RadioGroupItem 
-                          value="trimestral" 
-                          id="trimestral"
-                          className="absolute right-4 top-4"
-                        />
-                        <div className="mb-2">
-                          <h4 className="font-medium">Plano Trimestral</h4>
-                          <div className="mt-1">
-                            <span className="text-2xl font-bold">R$ 39,90</span>
-                            <span className="text-gray-500 text-sm"> por mês</span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-2">Total: R$ 119,70 a cada 3 meses</p>
-                      </div>
-                      
-                      <div className={`relative rounded-lg border p-4 ${selectedPlan === 'anual' ? 'ring-2 ring-primary' : ''}`}>
-                        <RadioGroupItem 
-                          value="anual" 
-                          id="anual"
-                          className="absolute right-4 top-4"
-                        />
-                        <div className="mb-2">
-                          <h4 className="font-medium">Plano Anual</h4>
-                          <div className="mt-1">
-                            <span className="text-2xl font-bold">R$ 29,90</span>
-                            <span className="text-gray-500 text-sm"> por mês</span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-2">Total: R$ 358,80 por ano (economia de 40%)</p>
-                      </div>
+                      ))}
                     </RadioGroup>
                   </div>
                   
@@ -384,10 +312,7 @@ const PaymentGateway = () => {
                         planType={selectedPlan}
                         priceId={paymentResponse.priceId}
                         onPaymentSuccess={handlePaymentSuccess}
-                        onCancel={() => {
-                          setActiveTab('select-plan');
-                          setPaymentResponse(null);
-                        }}
+                        onCancel={handleCancel}
                       />
                     )}
                   </div>

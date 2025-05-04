@@ -30,18 +30,7 @@ const Backups = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Transform the data to match our Backup type
-      const transformedData = data ? data.map(item => ({
-        id: item.id,
-        file_path: item.file_path,
-        file_size: item.file_size,
-        backup_type: item.backup_type,
-        status: item.status,
-        created_at: item.created_at
-      })) : [];
-      
-      setBackups(transformedData);
+      setBackups(data || []);
     } catch (error) {
       console.error('Erro ao buscar backups:', error);
       toast({
@@ -60,16 +49,16 @@ const Backups = () => {
       // Em uma implementação real, chamaríamos uma função serverless para criar o backup
       // Por enquanto, vamos simular o processo adicionando um novo registro de backup
       
-      const backupData = {
+      const newBackup = {
         file_path: `backups/backup_manual_${new Date().toISOString().replace(/[:.]/g, '_')}.sql`,
         file_size: Math.floor(Math.random() * 5000000) + 1000000, // Tamanho aleatório entre 1-6 MB
         backup_type: 'manual',
-        status: 'completed'
+        status: 'completed',
       };
       
       const { error } = await supabase
         .from('backups')
-        .insert([backupData]);
+        .insert(newBackup);
 
       if (error) throw error;
       

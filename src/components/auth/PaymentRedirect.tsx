@@ -2,16 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { InfoIcon, Loader2 } from 'lucide-react';
+import { InfoIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { logAccess } from '@/contexts/auth/utils';
-import { useAuth } from '@/contexts/auth';
 
 const PaymentRedirect = () => {
   const [paymentCountdown, setPaymentCountdown] = useState(5);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,30 +20,18 @@ const PaymentRedirect = () => {
 
   useEffect(() => {
     if (paymentCountdown === 0) {
-      // Registrar o evento de redirecionamento para pagamento
-      const logRedirect = async () => {
-        try {
-          console.log("Redirecionando para pagamento, user:", user?.email);
-          await logAccess('payment_redirect', user?.id);
-        } catch (err) {
-          console.error('Erro ao registrar redirecionamento de pagamento:', err);
-        }
-      };
-      
-      logRedirect();
-      
+      // Em produção, este seria um redirect real para o Stripe ou outro gateway
       toast({
         title: "Redirecionando para pagamento",
         description: "Configurando seu método de pagamento para quando o período gratuito terminar.",
       });
       
-      // Redirecionar para a página de pagamento com um pequeno delay para garantir que o toast seja exibido
-      setTimeout(() => {
-        console.log("Navegando para /payment-gateway");
-        navigate("/payment-gateway");
-      }, 500);
+      // Simular um redirecionamento para uma página de pagamento
+      // Em produção, isso seria substituído pelo URL real do gateway de pagamento
+      const paymentUrl = "/payment-gateway"; // No ambiente de produção: URL real do gateway de pagamento
+      navigate(paymentUrl);
     }
-  }, [paymentCountdown, navigate, toast, user]);
+  }, [paymentCountdown, navigate, toast]);
 
   return (
     <div className="space-y-4">
@@ -62,7 +47,6 @@ const PaymentRedirect = () => {
           Para garantir acesso contínuo após o período de teste, configuraremos seu método de pagamento agora.
           Você só será cobrado após os 14 dias gratuitos.
         </div>
-        <Loader2 className="h-8 w-8 animate-spin mx-auto my-3 text-primary" />
         <div className="text-lg font-medium mt-4">Redirecionando em {paymentCountdown}s</div>
       </div>
       <div className="bg-gray-100 rounded-lg p-4">

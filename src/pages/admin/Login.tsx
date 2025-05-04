@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon, Loader } from 'lucide-react';
+import TestCredentials from '@/components/TestCredentials';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');

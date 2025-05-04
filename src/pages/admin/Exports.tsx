@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -61,19 +62,17 @@ const Exports = () => {
 
       if (error) throw error;
       
-      if (data) {
-        // Map database fields to our frontend types
-        const mappedRestaurants: Restaurant[] = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          googleReviewUrl: item.google_review_url || ''
-        }));
-        
-        setRestaurants(mappedRestaurants);
-        
-        if (mappedRestaurants.length > 0) {
-          setSelectedRestaurant(mappedRestaurants[0].id);
-        }
+      // Map database fields to our frontend types
+      const mappedRestaurants: Restaurant[] = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        googleReviewUrl: item.google_review_url || ''
+      }));
+      
+      setRestaurants(mappedRestaurants);
+      
+      if (mappedRestaurants.length > 0) {
+        setSelectedRestaurant(mappedRestaurants[0].id);
       }
     } catch (error) {
       console.error('Error fetching restaurants:', error);

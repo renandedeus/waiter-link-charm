@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { logAccess } from '@/contexts/auth/utils';
 
 type SignupFormProps = {
   email: string;
@@ -61,10 +60,10 @@ const SignupForm = ({
     setIsLoading(true);
     
     try {
-      console.log("Tentando registro com email:", email);
-      console.log("URL de redirecionamento:", getSiteURL());
+      console.log("Attempting signup with email:", email);
+      console.log("Using redirect URL:", getSiteURL());
       
-      // Primeiro tentamos registrar o usuário diretamente
+      // First try signing up directly
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -72,12 +71,12 @@ const SignupForm = ({
           data: {
             name,
           },
-          emailRedirectTo: `${getSiteURL()}/auth-callback`,
+          emailRedirectTo: getSiteURL(),
         },
       });
       
       if (error) {
-        // Se o erro não for porque o usuário já existe
+        // If error is not because user already exists
         if (!error.message.includes('already been registered')) {
           setError(error.message || 'Erro ao criar conta');
           toast({
@@ -86,11 +85,11 @@ const SignupForm = ({
             variant: "destructive",
           });
         } else {
-          // Usuário já existe, tentar fazer login
+          // User already exists, try logging in
           const { error: signInError } = await signIn(email, password);
           
           if (signInError) {
-            // Se não conseguir fazer login, provavelmente precisa confirmar o email
+            // If can't login, probably needs to confirm email
             setActiveTab('login');
             setInfoMessage('Este email já está registrado. Por favor, confirme seu email para fazer login.');
             toast({
@@ -99,22 +98,17 @@ const SignupForm = ({
               variant: "info",
             });
           } else {
-            // Login bem-sucedido, registre este acesso
-            await logAccess('login_existing_user');
-            
-            // Redirecionar diretamente para o processo de escolha de plano
+            // Login successful
             toast({
               title: "Login realizado com sucesso",
-              description: "Você será redirecionado para escolher um plano",
+              description: "Você será redirecionado para o dashboard",
               variant: "success",
             });
-            
-            // Mostrar o componente PaymentRedirect em vez de redirecionar
-            setShowPaymentRedirect(true);
+            navigate('/dashboard');
           }
         }
       } else if (data?.user) {
-        // Se o registro foi bem-sucedido
+        // If signup was successful
         if (data.user.identities?.length === 0) {
           toast({
             title: "Email já registrado",
@@ -123,25 +117,18 @@ const SignupForm = ({
           });
           setActiveTab('login');
         } else {
-          // Registrar o acesso do novo usuário
-          try {
-            await logAccess('signup_success', data.user.id);
-          } catch (logError) {
-            console.error("Erro ao registrar acesso de signup:", logError);
-          }
-          
           toast({
             title: "Cadastro realizado com sucesso!",
             description: "Você tem 14 dias gratuitos. Você será redirecionado para configurar seu método de pagamento.",
             variant: "success",
           });
           
-          // Mostrar o componente PaymentRedirect imediatamente
+          // Iniciar contagem regressiva para redirecionamento
           setShowPaymentRedirect(true);
         }
       }
     } catch (err) {
-      console.error('Erro no signup:', err);
+      console.error('Signup error:', err);
       setError('Ocorreu um erro inesperado');
       toast({
         title: "Erro",
