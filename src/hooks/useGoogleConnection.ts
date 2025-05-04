@@ -102,10 +102,9 @@ export const useGoogleConnection = (
       const credential = response.credential;
       const payload = parseJwt(credential);
       
-      // In a real implementation, you would send this token to your backend
       console.log("Successfully authenticated with Google:", payload.email);
       
-      // For demo, we'll simulate account connection
+      // For real implementation, you would send this token to your backend
       setIsConnecting(true);
       
       // Simulate API call to get business locations
@@ -136,11 +135,15 @@ export const useGoogleConnection = (
   };
 
   const handleConnectGoogle = () => {
+    setIsConnecting(true);
     if (window.google && window.google.accounts) {
       window.google.accounts.id.prompt((notification: any) => {
+        console.log("Google prompt notification:", notification);
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // Try the Google popup approach instead
+          // Try manual OAuth flow if One Tap doesn't work
           handleManualConnect();
+        } else {
+          setIsConnecting(false);
         }
       });
     } else {
@@ -151,23 +154,45 @@ export const useGoogleConnection = (
   const handleManualConnect = () => {
     setIsConnecting(true);
     
-    // Simulate connection for demo purposes
-    setTimeout(() => {
-      const mockEmail = "usuario@gmail.com";
-      
-      localStorage.setItem('google_connection_status', 'connected');
-      localStorage.setItem('google_account_email', mockEmail);
-      
-      setIsConnected(true);
-      setConnectedAccount(mockEmail);
-      setIsConnecting(false);
-      
-      toast({
-        title: "Conta Google conectada",
-        description: `Conectado como ${mockEmail}`,
-        variant: "default",
+    // Initialize OAuth client
+    if (window.google && window.google.accounts.oauth2) {
+      const client = window.google.accounts.oauth2.initCodeClient({
+        client_id: "877489276615-pi7nt2a4c8uhuhal4ta2hf3he3md73nd.apps.googleusercontent.com",
+        scope: "email profile https://www.googleapis.com/auth/business.manage",
+        ux_mode: 'popup',
+        callback: (response: any) => {
+          if (response.code) {
+            // Here you would exchange the code for tokens on your backend
+            console.log("Authorization code received:", response.code);
+            
+            // Mock success for now
+            const mockEmail = "usuario@gmail.com";
+            localStorage.setItem('google_connection_status', 'connected');
+            localStorage.setItem('google_account_email', mockEmail);
+            
+            setIsConnected(true);
+            setConnectedAccount(mockEmail);
+            setIsConnecting(false);
+            
+            toast({
+              title: "Conta Google conectada",
+              description: `Conectado como ${mockEmail}`,
+              variant: "default",
+            });
+          }
+        },
       });
-    }, 1500);
+      
+      client.requestCode();
+    } else {
+      console.error("Google OAuth client not available");
+      setIsConnecting(false);
+      toast({
+        title: "Erro na conexão",
+        description: "API do Google não carregada corretamente",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDisconnect = async () => {
