@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Waiter } from '@/types';
 import { QRCode } from './QRCode';
 import { useToast } from "@/components/ui/use-toast";
+import { QrCode as QrCodeIcon } from "lucide-react";
 
 interface WaiterListProps {
   waiters: Waiter[];
@@ -49,6 +50,7 @@ export const WaiterList = ({ waiters, onDelete }: WaiterListProps) => {
                     
                     <div className="flex items-center justify-between pt-2">
                       <Button variant="outline" onClick={() => setSelectedWaiter(waiter)}>
+                        <QrCodeIcon className="h-4 w-4 mr-2" />
                         Ver QR Code
                       </Button>
                       <Button variant="destructive" onClick={() => handleDelete(waiter.id)}>

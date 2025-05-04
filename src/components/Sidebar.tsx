@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, Users, LogOut, Menu } from "lucide-react";
+import { Home, Users, LogOut, Menu, Check } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
@@ -24,6 +24,19 @@ export const Sidebar = ({ activePage, onNavigate }: SidebarProps) => {
         <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
           <Menu className="h-5 w-5" />
         </Button>
+      </div>
+      
+      <div className="p-4 mb-2">
+        <div className={cn(
+          "bg-green-50 border border-green-200 rounded-lg p-2 text-xs text-green-700",
+          collapsed && "hidden"
+        )}>
+          <div className="flex items-center">
+            <Check className="h-4 w-4 text-green-500 mr-1" />
+            <span className="font-medium">Plano Ativo</span>
+          </div>
+          <div className="mt-1">14 dias gratuitos</div>
+        </div>
       </div>
       
       <nav className="flex-1 p-2">
