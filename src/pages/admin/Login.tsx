@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,7 @@ const AdminLogin = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@exemplo.com"
+                    placeholder="admin@targetavaliacoes.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
