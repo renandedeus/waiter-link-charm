@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { Home, Edit, Users, LogOut } from 'lucide-react';
 
 interface SidebarProps {
