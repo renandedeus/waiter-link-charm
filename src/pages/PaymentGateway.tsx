@@ -35,8 +35,9 @@ const PaymentGateway = () => {
     checkStripeKey
   } = usePaymentProcess(user?.id);
 
-  // Check if Stripe key is available (for debugging)
+  // Check if Stripe key is available
   useEffect(() => {
+    // Ensure key is available - the constant is hardcoded in the hook
     checkStripeKey();
   }, []);
 

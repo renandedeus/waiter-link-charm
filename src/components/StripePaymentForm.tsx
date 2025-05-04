@@ -9,8 +9,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { logAccess } from '@/contexts/auth/utils';
 
 // Initialize Stripe with the public key directly
+// This key is hardcoded to ensure it's always available
 const stripePublicKey = 'pk_live_51QsRHwQ1OA5iIhkTsFOcfyvuSOLO47x407njqPNpBH2NvJcm8fGzDqeu0c9dnusvYVOdGL41N0plEMMhdznuwjKn00Im4e51uk';
-const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : null;
+const stripePromise = loadStripe(stripePublicKey);
 
 interface PaymentFormProps {
   clientSecret: string;

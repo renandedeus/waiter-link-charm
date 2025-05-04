@@ -6,6 +6,9 @@ import { logAccess } from '@/contexts/auth/utils';
 import { PaymentResponse } from '@/types/payment';
 import { useNavigate } from 'react-router-dom';
 
+// Define the Stripe key directly in the module
+const STRIPE_PUBLIC_KEY = 'pk_live_51QsRHwQ1OA5iIhkTsFOcfyvuSOLO47x407njqPNpBH2NvJcm8fGzDqeu0c9dnusvYVOdGL41N0plEMMhdznuwjKn00Im4e51uk';
+
 export const usePaymentProcess = (userId: string | undefined) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -20,9 +23,7 @@ export const usePaymentProcess = (userId: string | undefined) => {
 
   // Check if Stripe key is available (for debugging)
   const checkStripeKey = () => {
-    // Agora vamos verificar se a chave está definida diretamente no StripePaymentForm
-    const stripeKey = 'pk_live_51QsRHwQ1OA5iIhkTsFOcfyvuSOLO47x407njqPNpBH2NvJcm8fGzDqeu0c9dnusvYVOdGL41N0plEMMhdznuwjKn00Im4e51uk';
-    if (!stripeKey) {
+    if (!STRIPE_PUBLIC_KEY) {
       setDebugInfo('Chave pública do Stripe não encontrada.');
       console.error('Stripe public key not found');
       return false;
@@ -49,6 +50,12 @@ export const usePaymentProcess = (userId: string | undefined) => {
         variant: "destructive",
       });
       navigate('/');
+      return;
+    }
+
+    // Verify Stripe key before proceeding
+    if (!checkStripeKey()) {
+      setError("Chave pública do Stripe não encontrada. Entre em contato com o suporte.");
       return;
     }
 
