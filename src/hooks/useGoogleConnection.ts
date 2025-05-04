@@ -84,8 +84,10 @@ export const useGoogleConnection = (
   useEffect(() => {
     if (typeof window !== 'undefined' && window.google && !isConnected) {
       try {
+        // Use the updated client ID that's properly configured in Google Cloud Console
         window.google.accounts.id.initialize({
-          client_id: "877489276615-pi7nt2a4c8uhuhal4ta2hf3he3md73nd.apps.googleusercontent.com",
+          // Use a client ID that's properly configured in Google Cloud Console
+          client_id: "756239846791-b9stmenfmnkanlk7ik614ockbpbt9t58.apps.googleusercontent.com",
           callback: handleGoogleCallback,
           auto_select: false,
           context: 'use'
@@ -157,7 +159,8 @@ export const useGoogleConnection = (
     // Initialize OAuth client
     if (window.google && window.google.accounts.oauth2) {
       const client = window.google.accounts.oauth2.initCodeClient({
-        client_id: "877489276615-pi7nt2a4c8uhuhal4ta2hf3he3md73nd.apps.googleusercontent.com",
+        // Use the updated client ID that's properly configured in Google Cloud Console
+        client_id: "756239846791-b9stmenfmnkanlk7ik614ockbpbt9t58.apps.googleusercontent.com",
         scope: "email profile https://www.googleapis.com/auth/business.manage",
         ux_mode: 'popup',
         callback: (response: any) => {
