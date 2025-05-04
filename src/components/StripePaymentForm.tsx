@@ -37,6 +37,19 @@ const PaymentForm = ({
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Fetch user email on component mount
+  useEffect(() => {
+    const getUserEmail = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.email) {
+        setUserEmail(data.user.email);
+      }
+    };
+    
+    getUserEmail();
+  }, []);
 
   useEffect(() => {
     if (!stripe) {
@@ -56,6 +69,11 @@ const PaymentForm = ({
       return;
     }
 
+    if (!userEmail) {
+      setMessage("Não foi possível obter seu email. Por favor, faça login novamente.");
+      return;
+    }
+
     setIsLoading(true);
     setMessage(null);
 
@@ -72,6 +90,13 @@ const PaymentForm = ({
       if (paymentType === 'payment') {
         result = await stripe.confirmPayment({
           elements,
+          confirmParams: {
+            payment_method_data: {
+              billing_details: {
+                email: userEmail
+              }
+            }
+          },
           redirect: 'if_required',
         });
         
@@ -81,6 +106,7 @@ const PaymentForm = ({
           }
           
           setMessage(result.error.message || 'Ocorreu um erro ao processar o pagamento.');
+          console.error('Erro ao processar pagamento:', result.error);
           setIsLoading(false);
           return;
         }
@@ -109,6 +135,13 @@ const PaymentForm = ({
       } else if (paymentType === 'subscription') {
         result = await stripe.confirmSetup({
           elements,
+          confirmParams: {
+            payment_method_data: {
+              billing_details: {
+                email: userEmail
+              }
+            }
+          },
           redirect: 'if_required',
         });
         
@@ -118,6 +151,7 @@ const PaymentForm = ({
           }
           
           setMessage(result.error.message || 'Ocorreu um erro ao configurar o pagamento.');
+          console.error('Erro na assinatura:', result.error);
           setIsLoading(false);
           return;
         }
