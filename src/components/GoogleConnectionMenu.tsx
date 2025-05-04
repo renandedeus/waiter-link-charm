@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 interface BusinessLocation {
   id: string;
@@ -16,30 +16,29 @@ interface BusinessLocation {
   reviewUrl: string;
 }
 
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // In production, this should come from environment variables
+// In a real app, this should come from environment variables
+const GOOGLE_CLIENT_ID = "877489276615-pi7nt2a4c8uhuhal4ta2hf3he3md73nd.apps.googleusercontent.com";
 
 const GoogleConnectionMenu = () => {
   const { toast } = useToast();
+  const { restaurant, handleRestaurantUpdate } = useDashboardData();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [businessLocations, setBusinessLocations] = useState<BusinessLocation[]>([]);
-  const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null);
+  const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
+  const [locationName, setLocationName] = useState<string | null>(null);
   
-  const form = useForm();
-
   // Verificar se já existe uma conexão salva
   useEffect(() => {
     const checkExistingConnection = async () => {
       try {
         const savedConnectionStatus = localStorage.getItem('google_connection_status');
-        const savedLocationId = localStorage.getItem('google_location_id');
+        const savedAccount = localStorage.getItem('google_account_email');
+        const savedLocationName = localStorage.getItem('google_location_name');
         
-        if (savedConnectionStatus === 'connected' && savedLocationId) {
+        if (savedConnectionStatus === 'connected' && savedAccount) {
           setIsConnected(true);
-          setSelectedBusiness(savedLocationId);
-          
-          loadBusinessData();
+          setConnectedAccount(savedAccount);
+          setLocationName(savedLocationName);
         }
       } catch (error) {
         console.error("Erro ao verificar conexão existente:", error);
@@ -50,184 +49,141 @@ const GoogleConnectionMenu = () => {
     
     // Load Google API script
     const loadGoogleScript = () => {
-      if (document.querySelector('script[src*="apis.google.com/js/api:client.js"]')) {
+      if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
         return;
       }
       
       const script = document.createElement('script');
-      script.src = 'https://apis.google.com/js/api:client.js';
-      script.onload = initGoogleAuth;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
       document.body.appendChild(script);
     };
     
     loadGoogleScript();
   }, []);
   
-  const initGoogleAuth = () => {
-    if (!window.gapi) return;
-    
-    window.gapi.load('auth2', () => {
-      window.gapi.auth2.init({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/business.manage',
-      });
-    });
-  };
-  
-  const handleConnect = async () => {
-    setIsConnecting(true);
-    
-    try {
-      if (!window.gapi || !window.gapi.auth2) {
-        throw new Error("Google API não carregada corretamente");
+  // Initialize Google Identity Services when script is loaded
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.google && !isConnected) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+          auto_select: false,
+          context: 'use'
+        });
+      } catch (e) {
+        console.error("Error initializing Google Identity Services:", e);
       }
+    }
+  }, [isConnected]);
+
+  const handleGoogleCallback = async (response: any) => {
+    try {
+      // Process the credential
+      const credential = response.credential;
+      const payload = parseJwt(credential);
       
-      const googleAuth = window.gapi.auth2.getAuthInstance();
-      const user = await googleAuth.signIn({
-        scope: 'https://www.googleapis.com/auth/business.manage'
-      });
+      // In a real implementation, you would send this token to your backend
+      console.log("Successfully authenticated with Google:", payload.email);
       
-      const authResponse = user.getAuthResponse();
-      const token = authResponse.access_token;
+      // For demo, we'll simulate account connection
+      setIsConnecting(true);
       
-      // Aqui você faria uma chamada real para a API do Google para obter as localizações
-      // Por enquanto, vamos usar dados de exemplo
-      
-      // Simular dados retornados após autenticação
+      // Simulate API call to get business locations
       setTimeout(() => {
-        const mockLocations: BusinessLocation[] = [
-          { id: '1', name: 'Restaurante Principal', address: 'Av. Paulista, 1000', placeId: 'ChIJ1234567890abc', reviewUrl: 'https://g.page/r/CdSwPJZk5Ty6EBM/review' },
-          { id: '2', name: 'Restaurante Filial', address: 'Rua Augusta, 500', placeId: 'ChIJabcdef1234567', reviewUrl: 'https://g.page/r/CanotherReviewLink' },
-          { id: '3', name: 'Café Especial', address: 'Alameda Santos, 300', placeId: 'ChIJ7890abcdef1234', reviewUrl: 'https://g.page/r/CyetAnotherReviewLink' }
-        ];
+        // Save connection info
+        localStorage.setItem('google_connection_status', 'connected');
+        localStorage.setItem('google_account_email', payload.email);
         
-        setBusinessLocations(mockLocations);
+        setIsConnected(true);
+        setConnectedAccount(payload.email);
         setIsConnecting(false);
         
         toast({
-          title: "Autenticação Google concluída",
-          description: "Selecione qual empresa você deseja conectar ao sistema.",
-          variant: "success"
+          title: "Conta Google conectada",
+          description: `Conectado como ${payload.email}`,
+          variant: "default",
         });
-        
-      }, 2000);
-      
-      // Em uma implementação completa, você faria algo como:
-      // const response = await fetch('https://mybusinessbusinessinformation.googleapis.com/v1/accounts', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      // const data = await response.json();
-      // Processar os dados e obter as localizações
-      
-    } catch (error: any) {
-      console.error("Erro ao conectar com o Google:", error);
+      }, 1000);
+    } catch (error) {
+      console.error("Error handling Google callback:", error);
       setIsConnecting(false);
       toast({
-        title: "Erro de conexão",
-        description: error.message || "Não foi possível conectar com a conta Google. Tente novamente.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSelectBusiness = async (businessId: string) => {
-    setIsLoading(true);
-    setSelectedBusiness(businessId);
-    
-    try {
-      // Encontrar o negócio selecionado
-      const selectedLocation = businessLocations.find(loc => loc.id === businessId);
-      
-      if (!selectedLocation) {
-        throw new Error("Negócio não encontrado");
-      }
-      
-      // Em uma implementação real, aqui seria feita a integração com a API do Google My Business
-      // Para fins de demonstração, vamos simular o processo
-      
-      // Simular dados obtidos da API do Google
-      const mockBusinessData = {
-        name: selectedLocation.name,
-        reviewCount: 42,
-        initialRating: 4.2,
-        currentRating: 4.7,
-        reviewUrl: selectedLocation.reviewUrl,
-        recentReviews: [
-          {
-            id: "rev1",
-            author: "Maria Silva",
-            rating: 5,
-            content: "Excelente atendimento e comida maravilhosa!",
-            date: new Date().toISOString(),
-            restaurant_id: "123",
-            created_at: new Date().toISOString()
-          },
-          {
-            id: "rev2",
-            author: "João Pereira",
-            rating: 4,
-            content: "Muito bom, mas o tempo de espera poderia ser menor.",
-            date: new Date().toISOString(),
-            restaurant_id: "123",
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
-      
-      // Store connection data in localStorage for demo purposes
-      localStorage.setItem('google_connection_status', 'connected');
-      localStorage.setItem('google_location_id', selectedLocation.id);
-      localStorage.setItem('google_business_name', selectedLocation.name);
-      localStorage.setItem('google_review_url', mockBusinessData.reviewUrl);
-      
-      // Add reviews to the app state
-      // In a real implementation, we would save these to the database
-      console.log("Adding mock reviews:", mockBusinessData.recentReviews);
-      
-      setIsConnected(true);
-      setIsLoading(false);
-      
-      toast({
-        title: "Empresa conectada com sucesso",
-        description: `${selectedLocation.name} foi conectada ao sistema. As avaliações foram importadas.`,
-        variant: "success"
-      });
-      
-    } catch (error: any) {
-      console.error("Erro ao selecionar negócio:", error);
-      setIsLoading(false);
-      toast({
-        title: "Erro ao conectar empresa",
-        description: error.message || "Não foi possível obter os dados da empresa. Tente novamente.",
-        variant: "destructive"
+        title: "Erro na conexão",
+        description: "Não foi possível conectar com o Google",
+        variant: "destructive",
       });
     }
   };
   
-  const loadBusinessData = async () => {
-    // Em uma implementação real, aqui seriam carregados os dados da empresa do Google
-    // Por enquanto, vamos apenas exibir uma mensagem de sucesso
-    console.log("Carregando dados do negócio...");
+  // Helper to decode JWT token
+  const parseJwt = (token: string) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error("Error parsing JWT:", e);
+      return {};
+    }
+  };
+
+  const handleConnectGoogle = () => {
+    if (window.google && window.google.accounts) {
+      window.google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Try the Google popup approach instead
+          handleManualConnect();
+        }
+      });
+    } else {
+      handleManualConnect();
+    }
+  };
+  
+  const handleManualConnect = () => {
+    setIsConnecting(true);
+    
+    // Simulate connection for demo purposes
+    setTimeout(() => {
+      const mockEmail = "usuario@gmail.com";
+      
+      localStorage.setItem('google_connection_status', 'connected');
+      localStorage.setItem('google_account_email', mockEmail);
+      
+      setIsConnected(true);
+      setConnectedAccount(mockEmail);
+      setIsConnecting(false);
+      
+      toast({
+        title: "Conta Google conectada",
+        description: `Conectado como ${mockEmail}`,
+        variant: "default",
+      });
+    }, 1500);
   };
 
   const handleDisconnect = async () => {
     try {
-      if (window.gapi && window.gapi.auth2) {
-        const auth2 = window.gapi.auth2.getAuthInstance();
-        if (auth2) {
-          await auth2.signOut();
-        }
-      }
-      
       // Clear connection data from localStorage
       localStorage.removeItem('google_connection_status');
-      localStorage.removeItem('google_location_id');
-      localStorage.removeItem('google_business_name');
+      localStorage.removeItem('google_account_email');
+      localStorage.removeItem('google_location_name');
       localStorage.removeItem('google_review_url');
       
       setIsConnected(false);
-      setSelectedBusiness(null);
-      setBusinessLocations([]);
+      setConnectedAccount(null);
+      setLocationName(null);
       
       toast({
         title: "Conta Google desconectada",
@@ -243,77 +199,94 @@ const GoogleConnectionMenu = () => {
       });
     }
   };
+  
+  const handleSaveLocation = () => {
+    // Save the location info
+    if (locationName) {
+      localStorage.setItem('google_location_name', locationName);
+      
+      // Update the restaurant info
+      const updatedRestaurant = {
+        ...restaurant,
+        name: locationName,
+        // In a real implementation, we would pull these from the Google API
+        googleReviewUrl: "https://g.page/r/review-link-for-" + locationName.replace(/\s+/g, '-').toLowerCase(),
+        google_review_url: "https://g.page/r/review-link-for-" + locationName.replace(/\s+/g, '-').toLowerCase(),
+      };
+      
+      handleRestaurantUpdate(updatedRestaurant);
+      
+      toast({
+        title: "Local salvo",
+        description: `${locationName} foi configurado como seu negócio principal.`,
+        variant: "default",
+      });
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Conexão com o Google</CardTitle>
         <CardDescription>
-          Conecte sua conta do Google para acessar as avaliações do seu negócio no Google
+          Conecte sua conta do Google para sincronizar as avaliações do seu negócio
         </CardDescription>
       </CardHeader>
       
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-6">
           {isConnected ? (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-              <div>
-                <h4 className="text-sm font-medium text-green-900">Conta Google conectada</h4>
-                <p className="text-sm text-green-700 mt-1">
-                  Sua conta está conectada e podemos acessar as avaliações do seu negócio.
-                </p>
+            <>
+              <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <div>
+                  <h4 className="text-sm font-medium text-green-900">Conta Google conectada</h4>
+                  <p className="text-sm text-green-700 mt-1">
+                    {connectedAccount}
+                  </p>
+                </div>
               </div>
-            </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="google-account">Conta Google</Label>
+                  <Input 
+                    id="google-account" 
+                    value={connectedAccount || ""} 
+                    disabled
+                    className="bg-gray-50"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="google-location">Local do Google</Label>
+                  <Input 
+                    id="google-location" 
+                    value={locationName || ""} 
+                    onChange={(e) => setLocationName(e.target.value)}
+                    placeholder="Digite o nome do seu estabelecimento"
+                  />
+                </div>
+                
+                <Button onClick={handleSaveLocation}>Salvar</Button>
+              </div>
+            </>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 flex items-center">
               <AlertCircle className="h-5 w-5 text-yellow-500 mr-3" />
               <div>
                 <h4 className="text-sm font-medium text-yellow-900">Conta Google não conectada</h4>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Conecte sua conta do Google para que possamos acessar as avaliações do seu negócio.
+                  Conecte sua conta do Google para acessar as avaliações do seu negócio.
                 </p>
               </div>
             </div>
           )}
           
-          {!isConnected && businessLocations.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-sm font-medium mb-2">Selecione sua empresa:</h3>
-              <Form {...form}>
-                <FormField
-                  name="businessLocation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select 
-                        onValueChange={(value) => handleSelectBusiness(value)} 
-                        value={selectedBusiness || undefined}
-                        disabled={isLoading}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Selecione uma empresa" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {businessLocations.map((location) => (
-                            <SelectItem key={location.id} value={location.id}>
-                              {location.name} - {location.address}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </Form>
-            </div>
-          )}
-          
           <div className="mt-4">
             <p className="text-sm text-gray-600">
-              Ao conectar sua conta do Google, você permite que acessemos as avaliações do seu negócio no Google My Business.
-              Isso nos permite mostrar métricas e tendências de avaliações ao longo do tempo.
+              Ao conectar sua conta do Google, você permite que acessemos as informações do seu negócio 
+              no Google Business Profile, incluindo avaliações e métricas.
             </p>
           </div>
         </div>
@@ -324,27 +297,34 @@ const GoogleConnectionMenu = () => {
           <Button variant="outline" onClick={handleDisconnect}>
             Desconectar conta
           </Button>
-        ) : businessLocations.length > 0 ? (
-          <div className="flex flex-col w-full space-y-2">
-            <Button 
-              onClick={() => handleConnect()} 
-              disabled={isConnecting} 
-              variant="outline"
-            >
-              Conectar outra conta
-            </Button>
-          </div>
         ) : (
           <Button 
-            onClick={handleConnect} 
-            disabled={isConnecting} 
+            onClick={handleConnectGoogle} 
+            disabled={isConnecting}
+            className="flex items-center space-x-2"
           >
-            {isConnecting ? "Conectando..." : "Conectar conta Google"}
+            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+            <span>{isConnecting ? "Conectando..." : "Conectar conta Google"}</span>
           </Button>
         )}
       </CardFooter>
     </Card>
   );
 };
+
+// Add Google accounts interface to the global Window object
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          prompt: (callback: (notification: any) => void) => void;
+          renderButton: (element: HTMLElement, options: any) => void;
+        };
+      };
+    };
+  }
+}
 
 export default GoogleConnectionMenu;

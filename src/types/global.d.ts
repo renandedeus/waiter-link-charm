@@ -1,7 +1,16 @@
 
 interface Window {
-  gapi: {
-    load: (api: string, callback: () => void) => void;
+  google: {
+    accounts: {
+      id: {
+        initialize: (config: any) => void;
+        prompt: (callback: (notification: any) => void) => void;
+        renderButton: (element: HTMLElement, options: any) => void;
+      };
+      oauth2: {
+        initCodeClient: (config: any) => any;
+      };
+    };
     auth2: {
       init: (params: { client_id: string, scope: string }) => void;
       getAuthInstance: () => {

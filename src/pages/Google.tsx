@@ -19,9 +19,11 @@ const Google = () => {
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto p-4 md:p-6 space-y-6">
           <h1 className="text-2xl font-bold">Google</h1>
-          <p className="text-gray-600">Conecte sua conta do Google para gerenciar suas avaliações.</p>
+          <p className="text-gray-600 mb-6">
+            Conecte sua conta Google para sincronizar informações do seu negócio e simplificar o processo de avaliações.
+          </p>
           
-          <div className="mt-6">
+          <div className="max-w-2xl">
             <GoogleConnectionMenu />
           </div>
         </div>
