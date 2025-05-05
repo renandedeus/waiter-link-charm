@@ -41,30 +41,6 @@ export const useReviewsManagement = () => {
     }
   };
   
-  const addManualReview = async (review: Omit<Review, 'id' | 'created_at'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .insert({
-          author: review.author,
-          rating: review.rating,
-          content: review.content,
-          restaurant_id: review.restaurant_id
-        })
-        .select();
-        
-      if (error) throw error;
-      
-      // Refresh reviews list
-      await fetchReviews();
-      
-      return true;
-    } catch (error) {
-      console.error("Erro ao adicionar avaliação manual:", error);
-      return false;
-    }
-  };
-  
   const handleSelectReview = (review: Review) => {
     setSelectedReview(review);
   };
@@ -105,8 +81,6 @@ export const useReviewsManagement = () => {
     filteredReviews,
     setActiveTab,
     handleSelectReview,
-    handleResponseGenerated,
-    addManualReview,
-    fetchReviews
+    handleResponseGenerated
   };
 };

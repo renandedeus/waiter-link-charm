@@ -8,7 +8,6 @@ interface ConnectButtonProps {
   onConnect: () => void;
   onDisconnect: () => void;
   onSimulateConnect?: () => void;
-  onManualEntry?: () => void;
 }
 
 const ConnectButton: React.FC<ConnectButtonProps> = ({ 
@@ -16,8 +15,7 @@ const ConnectButton: React.FC<ConnectButtonProps> = ({
   isConnecting, 
   onConnect, 
   onDisconnect,
-  onSimulateConnect,
-  onManualEntry
+  onSimulateConnect
 }) => {
   if (isConnected) {
     return (
@@ -36,14 +34,6 @@ const ConnectButton: React.FC<ConnectButtonProps> = ({
       >
         <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
         <span>{isConnecting ? "Conectando..." : "Conectar conta Google"}</span>
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        onClick={onManualEntry}
-        className="mt-2 sm:mt-0"
-      >
-        Inserir dados manualmente
       </Button>
       
       <Button 
