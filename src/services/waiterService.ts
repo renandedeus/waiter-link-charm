@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Waiter, LeaderboardEntry, MonthlyChampion, Restaurant } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -113,22 +112,53 @@ export const setRestaurantInfo = async (
     
     if (!userId) throw new Error("User not authenticated");
     
-    const { data, error } = await supabase
+    // First check if restaurant exists
+    const { data: existing, error: checkError } = await supabase
       .from('restaurants')
-      .update({
-        name,
-        google_review_url: googleReviewUrl,
-        total_reviews: totalReviews,
-        initial_rating: initialRating,
-        current_rating: currentRating,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
       .select('*')
-      .single();
-    
-    if (error) throw error;
-    return data;
+      .eq('id', userId);
+      
+    if (checkError) throw checkError;
+
+    // If restaurant doesn't exist, insert a new record
+    if (!existing || existing.length === 0) {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .insert({
+          id: userId,
+          name,
+          google_review_url: googleReviewUrl,
+          total_reviews: totalReviews,
+          initial_rating: initialRating,
+          current_rating: currentRating,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select('*')
+        .maybeSingle();
+        
+      if (error) throw error;
+      return data;
+    } 
+    // Otherwise update the existing record
+    else {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .update({
+          name,
+          google_review_url: googleReviewUrl,
+          total_reviews: totalReviews,
+          initial_rating: initialRating,
+          current_rating: currentRating,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select('*')
+        .maybeSingle();
+        
+      if (error) throw error;
+      return data;
+    }
   } catch (error) {
     console.error('Error updating restaurant info:', error);
     throw error;
@@ -161,7 +191,7 @@ export const updateRestaurantFeedback = async (
   }
 };
 
-export const getRestaurantInfo = async (restaurantId?: string): Promise<Restaurant> => {
+export const getRestaurantInfo = async (restaurantId?: string): Promise<Restaurant | null> => {
   try {
     let id = restaurantId;
     
@@ -172,19 +202,23 @@ export const getRestaurantInfo = async (restaurantId?: string): Promise<Restaura
       if (!id) throw new Error("User not authenticated");
     }
     
+    // Use maybeSingle instead of single to prevent error when no results are returned
     const { data, error } = await supabase
       .from('restaurants')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     
     if (error) throw error;
+    
+    // If no restaurant found, return null
+    if (!data) return null;
     
     // Transform to match app's Restaurant model
     const restaurant: Restaurant = {
       id: data.id,
-      name: data.name,
-      googleReviewUrl: data.google_review_url,
+      name: data.name || '',
+      googleReviewUrl: data.google_review_url || '',
       responsible_name: data.responsible_name,
       responsible_email: data.responsible_email,
       responsible_phone: data.responsible_phone,
