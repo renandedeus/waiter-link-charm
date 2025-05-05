@@ -96,13 +96,13 @@ export const PlanSelector = ({
               key={plan.id} 
               className={`relative rounded-lg border p-4 cursor-pointer transition-all duration-200 
                 ${selectedPlan === plan.id 
-                  ? 'ring-2 ring-primary bg-primary/10 border-primary font-medium' 
-                  : 'hover:border-primary/50'}
-                ${plan.recommended ? 'ring-2 ring-primary' : ''}`}
+                  ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' 
+                  : 'hover:border-blue-300'}
+                ${plan.recommended ? 'ring-2 ring-blue-500' : ''}`}
               onClick={() => onPlanChange(plan.id)}
             >
               {plan.recommended && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs py-1 px-3 rounded-full">
                   Mais popular
                 </div>
               )}
