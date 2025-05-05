@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Review } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +49,7 @@ export const useReviewsManagement = () => {
           author: review.author,
           rating: review.rating,
           content: review.content,
-          restaurant_id: review.restaurantId
+          restaurant_id: review.restaurant_id
         })
         .select();
         

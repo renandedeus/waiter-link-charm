@@ -15,11 +15,13 @@ const GoogleConnectionMenu = () => {
     isConnecting,
     connectedAccount,
     locationName,
+    googleReviewUrl,
     handleConnectGoogle,
     handleDisconnect,
     handleSimulateConnect,
     handleManualEntry,
     setLocationName,
+    setGoogleReviewUrl,
     handleSaveLocation
   } = useGoogleConnection(handleRestaurantUpdate, restaurant);
 
@@ -43,7 +45,9 @@ const GoogleConnectionMenu = () => {
             <GoogleLocationForm
               connectedAccount={connectedAccount}
               locationName={locationName}
+              googleReviewUrl={googleReviewUrl}
               onLocationNameChange={setLocationName}
+              onGoogleReviewUrlChange={setGoogleReviewUrl}
               onSaveLocation={handleSaveLocation}
             />
           )}

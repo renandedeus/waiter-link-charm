@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -36,7 +35,8 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
     initialRating: restaurant.initialRating || 4.0,
     currentRating: restaurant.currentRating || 4.0,
     positiveFeedback: restaurant.positiveFeedback || '',
-    negativeFeedback: restaurant.negativeFeedback || ''
+    negativeFeedback: restaurant.negativeFeedback || '',
+    googleReviewUrl: restaurant.googleReviewUrl || 'https://g.page/r/CdSwPJZk5Ty6EBM/review'
   });
   const [totalClicks, setTotalClicks] = useState(0);
   const [totalConversions, setTotalConversions] = useState(0);
@@ -45,6 +45,16 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
   const { toast } = useToast();
   
   useEffect(() => {
+    // Update form data when restaurant prop changes
+    setFormData({
+      totalReviews: restaurant.totalReviews || 0,
+      initialRating: restaurant.initialRating || 4.0,
+      currentRating: restaurant.currentRating || 4.0,
+      positiveFeedback: restaurant.positiveFeedback || '',
+      negativeFeedback: restaurant.negativeFeedback || '',
+      googleReviewUrl: restaurant.googleReviewUrl || 'https://g.page/r/CdSwPJZk5Ty6EBM/review'
+    });
+    
     const fetchMetrics = async () => {
       const clicks = await getTotalClicks();
       const conversions = await getTotalConversions();
@@ -61,7 +71,7 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
     };
     
     fetchMetrics();
-  }, []);
+  }, [restaurant]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -80,7 +90,7 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
       // Update restaurant info
       const updatedRestaurant = await setRestaurantInfo(
         restaurant.name,
-        restaurant.googleReviewUrl,
+        formData.googleReviewUrl,
         formData.totalReviews,
         formData.initialRating,
         formData.currentRating
@@ -92,8 +102,14 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
         formData.negativeFeedback
       );
       
-      onUpdate(updatedRestaurant);
+      onUpdate({
+        ...updatedRestaurant,
+        googleReviewUrl: formData.googleReviewUrl
+      });
       setIsEditing(false);
+      
+      // Save to localStorage for better persistence
+      localStorage.setItem('google_review_url', formData.googleReviewUrl);
       
       toast({
         title: "Information updated",
@@ -169,6 +185,20 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="googleReviewUrl">Link do Google para avaliações</Label>
+                <Input 
+                  id="googleReviewUrl"
+                  name="googleReviewUrl"
+                  value={formData.googleReviewUrl}
+                  onChange={handleChange}
+                  placeholder="https://g.page/r/CdSwPJZk5Ty6EBM/review"
+                />
+                <p className="text-xs text-gray-500">
+                  Exemplo: https://g.page/r/CdSwPJZk5Ty6EBM/review
+                </p>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="totalReviews">Total Reviews</Label>
@@ -276,6 +306,29 @@ export const RestaurantMetrics = ({ restaurant, onUpdate }: RestaurantMetricsPro
               <p className="text-sm">
                 {restaurant.negativeFeedback || "No areas for improvement recorded yet."}
               </p>
+            </CardContent>
+          </Card>
+          
+          <Card className="md:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                <div className="flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Link para Avaliações
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <a 
+                  href={restaurant.googleReviewUrl || 'https://g.page/r/CdSwPJZk5Ty6EBM/review'} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline truncate"
+                >
+                  {restaurant.googleReviewUrl || 'https://g.page/r/CdSwPJZk5Ty6EBM/review'}
+                </a>
+              </div>
             </CardContent>
           </Card>
           
