@@ -2,10 +2,10 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stats } from '@/components/Stats';
-import { RestaurantForm } from '@/components/RestaurantForm';
 import { RestaurantMetrics } from '@/components/RestaurantMetrics';
 import { Leaderboard } from '@/components/Leaderboard';
 import { ReviewsList } from '@/components/ReviewsList';
+import { LeaderboardVisual } from '@/components/LeaderboardVisual';
 import { Restaurant, Review } from '@/types';
 import { Waiter } from '@/types';
 
@@ -42,17 +42,8 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
       <TabsContent value="overview" className="pt-4">
         <Stats waiters={waiters} restaurant={restaurant} />
         <div className="mt-6">
-          <RestaurantForm restaurant={restaurant} onSave={onSaveRestaurant} />
+          <LeaderboardVisual waiters={waiters} restaurant={restaurant} />
         </div>
-        
-        {restaurant.name && restaurant.googleReviewUrl && (
-          <div className="mt-6">
-            <h2 className="text-lg font-medium mb-2">Link de Avaliação do Restaurante</h2>
-            <div className="bg-white p-4 rounded-md border">
-              <p className="break-all">{restaurant.googleReviewUrl}</p>
-            </div>
-          </div>
-        )}
         
         {subscriptionStatus && (
           <div className="mt-6">
