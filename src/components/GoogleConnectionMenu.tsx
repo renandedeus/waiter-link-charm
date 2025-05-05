@@ -17,6 +17,7 @@ const GoogleConnectionMenu = () => {
     locationName,
     handleConnectGoogle,
     handleDisconnect,
+    handleSimulateConnect,
     setLocationName,
     handleSaveLocation
   } = useGoogleConnection(handleRestaurantUpdate, restaurant);
@@ -61,6 +62,7 @@ const GoogleConnectionMenu = () => {
           isConnecting={isConnecting}
           onConnect={handleConnectGoogle}
           onDisconnect={handleDisconnect}
+          onSimulateConnect={handleSimulateConnect}
         />
       </CardFooter>
     </Card>

@@ -44,3 +44,11 @@ export const loadGoogleScript = (): void => {
  * Google Client ID
  */
 export const GOOGLE_CLIENT_ID = "609592535220-k8apdmmab6asaotegvprhsb2dturjoqv.apps.googleusercontent.com";
+
+/**
+ * Check if we're in development mode
+ */
+export const isDevelopmentMode = (): boolean => {
+  return window.location.hostname.includes('localhost') || 
+         window.location.hostname.includes('lovableproject.com');
+};

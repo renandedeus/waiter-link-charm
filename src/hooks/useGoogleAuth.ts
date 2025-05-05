@@ -10,6 +10,7 @@ export interface UseGoogleAuthResult {
   handleConnectGoogle: () => void;
   handleManualConnect: () => void;
   handleDisconnect: () => void;
+  handleSimulateConnect: () => void;
 }
 
 export const useGoogleAuth = (): UseGoogleAuthResult => {
@@ -110,7 +111,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
     if (window.google && window.google.accounts.oauth2) {
       const client = window.google.accounts.oauth2.initCodeClient({
         client_id: GOOGLE_CLIENT_ID,
-        scope: "email profile https://www.googleapis.com/auth/business.manage",
+        scope: "email profile", // Removed business scope that requires verification
         ux_mode: 'popup',
         callback: (response: any) => {
           if (response.code) {
@@ -145,6 +146,26 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
     }
   };
 
+  const handleSimulateConnect = () => {
+    setIsConnecting(true);
+    
+    setTimeout(() => {
+      const simulatedEmail = "usuario.simulado@gmail.com";
+      localStorage.setItem('google_connection_status', 'connected');
+      localStorage.setItem('google_account_email', simulatedEmail);
+      
+      setIsConnected(true);
+      setConnectedAccount(simulatedEmail);
+      setIsConnecting(false);
+      
+      toast({
+        title: "Conexão simulada",
+        description: `Conectado como ${simulatedEmail} (modo de desenvolvimento)`,
+        variant: "default",
+      });
+    }, 500);
+  };
+
   const handleDisconnect = async () => {
     try {
       localStorage.removeItem('google_connection_status');
@@ -175,6 +196,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
     connectedAccount,
     handleConnectGoogle,
     handleManualConnect,
-    handleDisconnect
+    handleDisconnect,
+    handleSimulateConnect
   };
 };

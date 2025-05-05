@@ -7,13 +7,15 @@ interface ConnectButtonProps {
   isConnecting: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
+  onSimulateConnect?: () => void;
 }
 
 const ConnectButton: React.FC<ConnectButtonProps> = ({ 
   isConnected, 
   isConnecting, 
   onConnect, 
-  onDisconnect 
+  onDisconnect,
+  onSimulateConnect
 }) => {
   if (isConnected) {
     return (
@@ -24,14 +26,24 @@ const ConnectButton: React.FC<ConnectButtonProps> = ({
   }
 
   return (
-    <Button 
-      onClick={onConnect} 
-      disabled={isConnecting}
-      className="flex items-center space-x-2"
-    >
-      <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-      <span>{isConnecting ? "Conectando..." : "Conectar conta Google"}</span>
-    </Button>
+    <div className="flex flex-col gap-2 sm:flex-row">
+      <Button 
+        onClick={onConnect} 
+        disabled={isConnecting}
+        className="flex items-center space-x-2"
+      >
+        <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+        <span>{isConnecting ? "Conectando..." : "Conectar conta Google"}</span>
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        onClick={onSimulateConnect}
+        className="mt-2 sm:mt-0"
+      >
+        Simular conexão (modo de desenvolvimento)
+      </Button>
+    </div>
   );
 };
 
