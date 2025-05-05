@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -63,7 +62,7 @@ export const LeaderboardVisual: React.FC<LeaderboardVisualProps> = ({ waiters, r
               RANKING GERAL
             </CardTitle>
             <div className="bg-green-500 text-white absolute right-0 top-0 p-2 px-4">
-              <div className="text-xs uppercase">TIME REMAINING</div>
+              <div className="text-xs uppercase">TEMPO RESTANTE</div>
               <div className="text-2xl font-bold flex items-center justify-center gap-2">
                 <span>{daysUntilEndOfMonth}</span>
                 <span>:</span>
@@ -72,9 +71,9 @@ export const LeaderboardVisual: React.FC<LeaderboardVisualProps> = ({ waiters, r
                 <span>{minutes.toString().padStart(2, '0')}</span>
               </div>
               <div className="text-xs flex items-center justify-between">
-                <span>DAYS</span>
-                <span className="ml-6">HOURS</span>
-                <span className="ml-2">MINUTES</span>
+                <span>DIAS</span>
+                <span className="ml-6">HORAS</span>
+                <span className="ml-2">MINUTOS</span>
               </div>
             </div>
           </CardHeader>

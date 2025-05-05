@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Home, ListChecks, Globe, Settings, MessageSquare, LogOut } from 'lucide-react';
+import { Home, ListChecks, Globe, Settings, MessageSquare, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
   activePage: 'dashboard' | 'waiters' | 'google' | 'reviews';
@@ -13,6 +14,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
   const { signOut } = useAuth();
   const { toast } = useToast();
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -32,9 +34,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
   };
 
   return (
-    <div className="w-64 bg-gray-100 border-r border-gray-200 h-full">
+    <div className={`${collapsed ? 'w-16' : 'w-64'} bg-gray-100 border-r border-gray-200 h-full transition-width duration-300 ease-in-out relative`}>
+      <Button 
+        variant="outline"
+        size="icon" 
+        className="absolute -right-3 top-6 bg-white border border-gray-200 rounded-full shadow-sm h-6 w-6 p-0 flex items-center justify-center"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </Button>
+      
       <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Target Avaliações</h2>
+        {!collapsed && <h2 className="text-lg font-semibold mb-4">Target Avaliações</h2>}
         <nav>
           <ul className="space-y-2">
             <li>
@@ -45,8 +56,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
                 }`}
                 onClick={() => onNavigate('dashboard')}
               >
-                <Home className="mr-2 h-4 w-4" />
-                Painel
+                <Home className="h-4 w-4" />
+                {!collapsed && <span className="ml-2">Painel</span>}
               </Link>
             </li>
             <li>
@@ -57,8 +68,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
                 }`}
                 onClick={() => onNavigate('waiters')}
               >
-                <ListChecks className="mr-2 h-4 w-4" />
-                Garçons
+                <ListChecks className="h-4 w-4" />
+                {!collapsed && <span className="ml-2">Garçom/Entregador</span>}
               </Link>
             </li>
             <li>
@@ -69,8 +80,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
                 }`}
                 onClick={() => onNavigate('google')}
               >
-                <Globe className="mr-2 h-4 w-4" />
-                Google
+                <Globe className="h-4 w-4" />
+                {!collapsed && <span className="ml-2">Google</span>}
               </Link>
             </li>
             <li>
@@ -81,23 +92,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
                 }`}
                 onClick={() => onNavigate('reviews')}
               >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Avaliações
+                <MessageSquare className="h-4 w-4" />
+                {!collapsed && <span className="ml-2">Avaliações</span>}
               </Link>
             </li>
           </ul>
         </nav>
         <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
           <Link to="/settings" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-200">
-            <Settings className="mr-2 h-4 w-4" />
-            Configurações
+            <Settings className="h-4 w-4" />
+            {!collapsed && <span className="ml-2">Configurações</span>}
           </Link>
           <button 
             onClick={handleLogout}
             className="flex w-full items-center px-3 py-2 rounded-md hover:bg-gray-200 text-left"
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span className="ml-2">Sair</span>}
           </button>
         </div>
       </div>

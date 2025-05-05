@@ -25,10 +25,10 @@ const WaiterManagement: React.FC<WaiterManagementProps> = ({
       const newWaiter = await onAddWaiter(name, email, whatsapp);
       return newWaiter;
     } catch (error) {
-      console.error('Erro ao adicionar garçom:', error);
+      console.error('Erro ao adicionar garçom/entregador:', error);
       toast({
-        title: "Erro ao adicionar garçom",
-        description: "Ocorreu um problema ao tentar adicionar o garçom. Por favor, tente novamente.",
+        title: "Erro ao adicionar garçom/entregador",
+        description: "Ocorreu um problema ao tentar adicionar o garçom/entregador. Por favor, tente novamente.",
         variant: "destructive",
       });
       throw error; // Re-throw for proper error handling in WaiterForm
@@ -41,10 +41,10 @@ const WaiterManagement: React.FC<WaiterManagementProps> = ({
     try {
       await onDeleteWaiter(id);
     } catch (error) {
-      console.error('Erro ao excluir garçom:', error);
+      console.error('Erro ao excluir garçom/entregador:', error);
       toast({
-        title: "Erro ao excluir garçom",
-        description: "Ocorreu um problema ao tentar excluir o garçom. Por favor, tente novamente.",
+        title: "Erro ao excluir garçom/entregador",
+        description: "Ocorreu um problema ao tentar excluir o garçom/entregador. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
@@ -54,7 +54,7 @@ const WaiterManagement: React.FC<WaiterManagementProps> = ({
     <>
       <WaiterForm onSave={handleAddWaiter} />
       <div className="mt-6">
-        <h2 className="text-lg font-medium mb-4">Seus Garçons</h2>
+        <h2 className="text-lg font-medium mb-4">Seus Garçom/Entregador</h2>
         <WaiterList waiters={waiters} onDelete={handleDeleteWaiter} />
       </div>
     </>
