@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { parseJwt, loadGoogleScript, GOOGLE_CLIENT_ID } from '@/utils/googleUtils';
@@ -9,6 +8,7 @@ export interface UseGoogleAuthResult {
   connectedAccount: string | null;
   handleConnectGoogle: () => void;
   handleManualConnect: () => void;
+  handleManualEntry: () => void;
   handleDisconnect: () => void;
   handleSimulateConnect: () => void;
 }
@@ -146,6 +146,21 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
     }
   };
 
+  const handleManualEntry = () => {
+    const manualEmail = "entrada.manual@sistema.com";
+    localStorage.setItem('google_connection_status', 'manual');
+    localStorage.setItem('google_account_email', manualEmail);
+    
+    setIsConnected(true);
+    setConnectedAccount(manualEmail);
+    
+    toast({
+      title: "Modo manual ativado",
+      description: "Você agora pode inserir dados manualmente",
+      variant: "default",
+    });
+  };
+
   const handleSimulateConnect = () => {
     setIsConnecting(true);
     
@@ -196,6 +211,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
     connectedAccount,
     handleConnectGoogle,
     handleManualConnect,
+    handleManualEntry,
     handleDisconnect,
     handleSimulateConnect
   };

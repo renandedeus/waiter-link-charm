@@ -18,6 +18,7 @@ const GoogleConnectionMenu = () => {
     handleConnectGoogle,
     handleDisconnect,
     handleSimulateConnect,
+    handleManualEntry,
     setLocationName,
     handleSaveLocation
   } = useGoogleConnection(handleRestaurantUpdate, restaurant);
@@ -27,7 +28,7 @@ const GoogleConnectionMenu = () => {
       <CardHeader>
         <CardTitle>Conexão com o Google</CardTitle>
         <CardDescription>
-          Conecte sua conta do Google para sincronizar as avaliações do seu negócio
+          Conecte sua conta do Google para sincronizar as avaliações do seu negócio ou insira dados manualmente
         </CardDescription>
       </CardHeader>
       
@@ -49,8 +50,8 @@ const GoogleConnectionMenu = () => {
           
           <div className="mt-4">
             <p className="text-sm text-gray-600">
-              Ao conectar sua conta do Google, você permite que acessemos as informações do seu negócio 
-              no Google Business Profile, incluindo avaliações e métricas.
+              Você pode conectar sua conta do Google Business Profile ou optar por inserir dados manualmente
+              para gerenciar avaliações e métricas do seu negócio.
             </p>
           </div>
         </div>
@@ -63,6 +64,7 @@ const GoogleConnectionMenu = () => {
           onConnect={handleConnectGoogle}
           onDisconnect={handleDisconnect}
           onSimulateConnect={handleSimulateConnect}
+          onManualEntry={handleManualEntry}
         />
       </CardFooter>
     </Card>

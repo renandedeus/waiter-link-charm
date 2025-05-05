@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Review } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +37,30 @@ export const useReviewsManagement = () => {
       console.error("Erro ao buscar avaliações:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const addManualReview = async (review: Omit<Review, 'id' | 'created_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .insert({
+          author: review.author,
+          rating: review.rating,
+          content: review.content,
+          restaurant_id: review.restaurantId
+        })
+        .select();
+        
+      if (error) throw error;
+      
+      // Refresh reviews list
+      await fetchReviews();
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao adicionar avaliação manual:", error);
+      return false;
     }
   };
   
@@ -81,6 +104,8 @@ export const useReviewsManagement = () => {
     filteredReviews,
     setActiveTab,
     handleSelectReview,
-    handleResponseGenerated
+    handleResponseGenerated,
+    addManualReview,
+    fetchReviews
   };
 };
