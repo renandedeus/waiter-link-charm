@@ -96,13 +96,13 @@ export const PlanSelector = ({
               key={plan.id} 
               className={`relative rounded-lg border p-4 cursor-pointer transition-all duration-200 
                 ${selectedPlan === plan.id 
-                  ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' 
-                  : 'hover:border-blue-300'}
-                ${plan.recommended ? 'ring-2 ring-blue-500' : ''}`}
+                  ? 'ring-2 ring-teal-500 bg-teal-50 border-teal-200' 
+                  : 'hover:border-teal-300'}
+                ${plan.recommended ? 'ring-2 ring-teal-500' : ''}`}
               onClick={() => onPlanChange(plan.id)}
             >
               {plan.recommended && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs py-1 px-3 rounded-full">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-teal-500 text-white text-xs py-1 px-3 rounded-full">
                   Mais popular
                 </div>
               )}
@@ -119,11 +119,11 @@ export const PlanSelector = ({
         </RadioGroup>
       </div>
       
-      <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+      <div className="bg-teal-50 border border-teal-200 rounded-md p-4 mb-6">
         <div className="flex items-start">
-          <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+          <Info className="h-5 w-5 text-teal-500 mr-2 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm text-blue-800">
+            <p className="text-sm text-teal-800">
               <strong>Importante:</strong> O acesso ao sistema será liberado imediatamente após a confirmação do pagamento.
             </p>
           </div>
@@ -139,7 +139,7 @@ export const PlanSelector = ({
       
       <Button 
         onClick={onContinue} 
-        className="w-full mt-6" 
+        className="w-full mt-6 bg-teal-600 hover:bg-teal-700" 
         disabled={isProcessing}
       >
         {isProcessing ? (

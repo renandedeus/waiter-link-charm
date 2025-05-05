@@ -16,10 +16,10 @@ export const getStripeElementsOptions = (clientSecret: string): StripeElementsOp
     appearance: {
       theme: 'stripe',
       variables: {
-        colorPrimary: '#0570de',
+        colorPrimary: '#14b8a6', // teal-500
         colorBackground: '#ffffff',
-        colorText: '#30313d',
-        colorDanger: '#df1b41',
+        colorText: '#334155', // slate-700
+        colorDanger: '#ef4444', // red-500
         fontFamily: 'system-ui, -apple-system, sans-serif',
         spacingUnit: '4px',
         borderRadius: '4px'

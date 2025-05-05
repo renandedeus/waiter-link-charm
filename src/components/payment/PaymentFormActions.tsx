@@ -24,7 +24,7 @@ const PaymentFormActions = ({
       <Button 
         type="submit" 
         disabled={!isStripeReady || isLoading || isSuccess}
-        className="w-full"
+        className="w-full bg-teal-600 hover:bg-teal-700"
       >
         {isLoading ? (
           <>
@@ -46,11 +46,12 @@ const PaymentFormActions = ({
         variant="outline"
         onClick={onCancel}
         disabled={isLoading || isSuccess}
+        className="border-slate-200 text-slate-700 hover:bg-slate-50"
       >
         Voltar
       </Button>
       
-      <p className="text-xs text-center text-gray-500 mt-4">
+      <p className="text-xs text-center text-slate-500 mt-4">
         Seus dados de pagamento são processados com segurança pelo Stripe.
       </p>
     </div>
