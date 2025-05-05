@@ -51,9 +51,9 @@ export const PlanSelector = ({
     {
       id: 'anual',
       name: 'Plano Anual',
-      price: 'R$ 49,90',
-      billingCycle: '6x de R$ 49,90 no cartão',
-      description: 'Pagamento único de R$ 299,40',
+      price: 'R$ 67,00',
+      billingCycle: '12x de R$ 67,00 no cartão',
+      description: 'Pagamento único de R$ 804,00',
       recommended: true
     }
   ];
@@ -92,7 +92,13 @@ export const PlanSelector = ({
           className="grid gap-4 grid-cols-1 md:grid-cols-3"
         >
           {planDetails.map(plan => (
-            <div key={plan.id} className={`relative rounded-lg border p-4 ${plan.recommended ? 'ring-2 ring-primary' : ''}`}>
+            <div 
+              key={plan.id} 
+              className={`relative rounded-lg border p-4 cursor-pointer transition-all
+                ${selectedPlan === plan.id ? 'bg-[#f0fdf4] border-green-500 font-medium' : 'hover:border-gray-400'}
+                ${plan.recommended ? 'ring-2 ring-primary' : ''}`}
+              onClick={() => onPlanChange(plan.id)}
+            >
               {plan.recommended && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs py-1 px-3 rounded-full">
                   Mais popular
