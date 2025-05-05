@@ -8,14 +8,30 @@ interface PaymentSummaryProps {
   paymentResponse: PaymentResponse | null;
   onPaymentSuccess: () => void;
   onCancel: () => void;
+  installments?: number;
 }
 
 const PaymentSummary = ({ 
   selectedPlan, 
   paymentResponse, 
   onPaymentSuccess, 
-  onCancel 
+  onCancel,
+  installments = 1
 }: PaymentSummaryProps) => {
+  // Calculate installment amount and total
+  let totalAmount = 0;
+  let installmentAmount = 0;
+  
+  if (selectedPlan === 'semestral') {
+    totalAmount = 522;
+  } else if (selectedPlan === 'anual') {
+    totalAmount = 804;
+  } else {
+    totalAmount = 97;
+  }
+  
+  installmentAmount = installments > 0 ? totalAmount / installments : totalAmount;
+  
   return (
     <div className="space-y-4 mt-4">
       <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
@@ -35,13 +51,30 @@ const PaymentSummary = ({
            selectedPlan === 'semestral' ? 'Plano Semestral' : 'Plano Anual'}
         </h3>
         
-        <p className="text-sm text-gray-600 mb-6">
-          {selectedPlan === 'mensal' 
-            ? 'Pagamento mensal recorrente de R$ 97,00'
-            : selectedPlan === 'semestral'
-            ? 'Pagamento único em 6x de R$ 87,00 (R$ 522,00)'
-            : 'Pagamento único em 12x de R$ 67,00 (R$ 804,00)'}
-        </p>
+        <div className="space-y-4 mb-6">
+          {selectedPlan === 'mensal' ? (
+            <p className="text-sm text-gray-600">
+              Pagamento mensal recorrente de R$ 97,00
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600">
+                {selectedPlan === 'semestral' ? 'Pagamento único de R$ 522,00' : 'Pagamento único de R$ 804,00'}
+              </p>
+              
+              <div className="bg-gray-50 p-3 rounded-md border">
+                <p className="text-sm font-medium">
+                  Forma de pagamento: {installments === 1 ? 'À vista' : `Parcelado em ${installments}x`}
+                </p>
+                {installments > 1 && (
+                  <p className="text-sm text-gray-600">
+                    {installments}x de R$ {installmentAmount.toFixed(2).replace('.', ',')}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
         
         {paymentResponse && (
           <StripePaymentForm
@@ -50,6 +83,7 @@ const PaymentSummary = ({
             amount={paymentResponse.amount}
             planType={selectedPlan}
             priceId={paymentResponse.priceId}
+            installments={installments}
             onPaymentSuccess={onPaymentSuccess}
             onCancel={onCancel}
           />

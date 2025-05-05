@@ -19,6 +19,7 @@ interface PaymentFormProps {
   amount: number;
   planType: string;
   priceId?: string;
+  installments: number;
   onPaymentSuccess: () => void;
   onCancel: () => void;
 }
@@ -29,6 +30,7 @@ const PaymentForm = ({
   amount, 
   planType, 
   priceId,
+  installments,
   onPaymentSuccess, 
   onCancel 
 }: PaymentFormProps) => {
@@ -115,7 +117,8 @@ const PaymentForm = ({
         const { data, error } = await supabase.functions.invoke('update-payment-status', {
           body: { 
             paymentIntentId: result.paymentIntent.id, 
-            paymentType: 'payment' 
+            paymentType: 'payment',
+            installments
           }
         });
         
@@ -198,6 +201,26 @@ const PaymentForm = ({
     }
   };
 
+  // Format payment amount to display with installments if applicable
+  const formatPaymentAmount = () => {
+    const formattedTotal = new Intl.NumberFormat('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL' 
+    }).format(amount / 100);
+    
+    if (installments > 1) {
+      const installmentAmount = (amount / 100) / installments;
+      const formattedInstallment = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(installmentAmount);
+      
+      return `${installments}x de ${formattedInstallment}`;
+    }
+    
+    return formattedTotal;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <PaymentElement options={{
@@ -243,7 +266,7 @@ const PaymentForm = ({
               Pagamento Aprovado
             </>
           ) : (
-            `Pagar ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount / 100)}`
+            `Pagar ${formatPaymentAmount()}`
           )}
         </Button>
         
@@ -270,6 +293,7 @@ interface StripePaymentFormProps {
   amount: number;
   planType: string;
   priceId?: string;
+  installments?: number;
   onPaymentSuccess: () => void;
   onCancel: () => void;
 }
@@ -280,6 +304,7 @@ const StripePaymentForm = ({
   amount,
   planType,
   priceId,
+  installments = 1,
   onPaymentSuccess,
   onCancel
 }: StripePaymentFormProps) => {
@@ -325,6 +350,7 @@ const StripePaymentForm = ({
         amount={amount}
         planType={planType}
         priceId={priceId}
+        installments={installments}
         onPaymentSuccess={onPaymentSuccess}
         onCancel={onCancel}
       />

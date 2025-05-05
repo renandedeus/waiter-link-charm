@@ -4,10 +4,15 @@ import { AlertTriangle, Info } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Loader2, CreditCard, ShieldCheck } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface PlanSelectorProps {
   selectedPlan: string;
+  selectedInstallments: number;
   onPlanChange: (plan: string) => void;
+  onInstallmentsChange: (installments: number) => void;
   onContinue: () => void;
   isProcessing: boolean;
   error: string | null;
@@ -21,11 +26,14 @@ interface PlanDetail {
   billingCycle: string;
   description: string;
   recommended: boolean;
+  maxInstallments: number;
 }
 
 export const PlanSelector = ({ 
   selectedPlan, 
+  selectedInstallments,
   onPlanChange, 
+  onInstallmentsChange,
   onContinue, 
   isProcessing, 
   error,
@@ -38,7 +46,8 @@ export const PlanSelector = ({
       price: 'R$ 97,00',
       billingCycle: 'por mês',
       description: 'Pagamento mensal recorrente',
-      recommended: false
+      recommended: false,
+      maxInstallments: 1
     },
     {
       id: 'semestral',
@@ -46,7 +55,8 @@ export const PlanSelector = ({
       price: 'R$ 87,00',
       billingCycle: '6x de R$ 87,00 no cartão',
       description: 'Pagamento único de R$ 522,00',
-      recommended: false
+      recommended: false,
+      maxInstallments: 6
     },
     {
       id: 'anual',
@@ -54,9 +64,34 @@ export const PlanSelector = ({
       price: 'R$ 67,00',
       billingCycle: '12x de R$ 67,00 no cartão',
       description: 'Pagamento único de R$ 804,00',
-      recommended: true
+      recommended: true,
+      maxInstallments: 12
     }
   ];
+
+  const currentPlan = planDetails.find(plan => plan.id === selectedPlan) || planDetails[0];
+  const hasInstallmentOptions = currentPlan.maxInstallments > 1;
+  
+  // Generate installment options based on the selected plan
+  const installmentOptions = [];
+  for (let i = 1; i <= currentPlan.maxInstallments; i++) {
+    let totalAmount = 0;
+    
+    if (currentPlan.id === 'semestral') {
+      totalAmount = 522;
+    } else if (currentPlan.id === 'anual') {
+      totalAmount = 804;
+    }
+    
+    const installmentAmount = (totalAmount / i).toFixed(2).replace('.', ',');
+    
+    installmentOptions.push({
+      value: i,
+      label: i === 1 
+        ? `À vista - R$ ${totalAmount},00` 
+        : `${i}x de R$ ${installmentAmount}`
+    });
+  }
 
   return (
     <div className="space-y-4 mt-4">
@@ -122,6 +157,37 @@ export const PlanSelector = ({
         </RadioGroup>
       </div>
       
+      {/* Installment options section - Only shown for semestral and anual plans */}
+      {hasInstallmentOptions && (
+        <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+          <h4 className="font-medium mb-3">Opções de parcelamento</h4>
+          <p className="text-sm text-gray-600 mb-3">
+            Escolha em quantas vezes deseja pagar:
+          </p>
+          <Select
+            value={selectedInstallments.toString()}
+            onValueChange={(value) => onInstallmentsChange(parseInt(value))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione o número de parcelas" />
+            </SelectTrigger>
+            <SelectContent>
+              {installmentOptions.map(option => (
+                <SelectItem key={option.value} value={option.value.toString()}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2 mt-3">
+            <Checkbox id="creditcard" checked readOnly />
+            <Label htmlFor="creditcard" className="text-sm text-gray-600">
+              Pagamento via cartão de crédito
+            </Label>
+          </div>
+        </div>
+      )}
+
       <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
         <div className="flex items-start">
           <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />

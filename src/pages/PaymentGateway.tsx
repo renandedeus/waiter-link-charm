@@ -23,11 +23,13 @@ const PaymentGateway = () => {
     isProcessing,
     isSuccess,
     selectedPlan,
+    selectedInstallments,
     activeTab,
     paymentResponse,
     error,
     debugInfo,
     handlePlanChange,
+    handleInstallmentsChange,
     handleRetry,
     handleCreatePaymentIntent,
     handlePaymentSuccess,
@@ -100,7 +102,9 @@ const PaymentGateway = () => {
                 <TabsContent value="select-plan">
                   <PlanSelector 
                     selectedPlan={selectedPlan}
+                    selectedInstallments={selectedInstallments}
                     onPlanChange={handlePlanChange}
+                    onInstallmentsChange={handleInstallmentsChange}
                     onContinue={handleCreatePaymentIntent}
                     isProcessing={isProcessing}
                     error={error}
@@ -114,6 +118,7 @@ const PaymentGateway = () => {
                     paymentResponse={paymentResponse}
                     onPaymentSuccess={handlePaymentSuccess}
                     onCancel={handleCancel}
+                    installments={selectedInstallments}
                   />
                 </TabsContent>
               </Tabs>

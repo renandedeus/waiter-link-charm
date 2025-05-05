@@ -5,4 +5,5 @@ export interface PaymentResponse {
   paymentType: 'payment' | 'subscription';
   priceId?: string;
   amount: number;
+  installments?: number;
 }

@@ -27,13 +27,27 @@ serve(async (req) => {
       throw new Error("Corpo da requisição inválido");
     }
     
-    const { planType } = body;
+    const { planType, installments = 1 } = body;
     
     console.log("Tipo de plano recebido:", planType);
+    console.log("Número de parcelas:", installments);
     
     // Validar o tipo de plano
     if (!["mensal", "semestral", "anual"].includes(planType)) {
       throw new Error("Tipo de plano inválido");
+    }
+    
+    // Validar o número de parcelas
+    if (planType === "mensal" && installments !== 1) {
+      throw new Error("Plano mensal não pode ter parcelas");
+    }
+    
+    if (planType === "semestral" && installments > 6) {
+      throw new Error("Plano semestral pode ter no máximo 6 parcelas");
+    }
+    
+    if (planType === "anual" && installments > 12) {
+      throw new Error("Plano anual pode ter no máximo 12 parcelas");
     }
     
     // Usar o cliente Supabase para autenticação do usuário
@@ -137,7 +151,7 @@ serve(async (req) => {
       }
       
       // Configurar os valores com base no tipo de plano
-      let amount, description, paymentType, interval;
+      let amount, description, paymentType, interval, installmentPlan;
       
       console.log("Configurando dados do plano:", planType);
       switch(planType) {
@@ -146,16 +160,33 @@ serve(async (req) => {
           description = "Plano Mensal - Waiter Link";
           paymentType = "subscription";
           interval = "month";
+          installmentPlan = null;
           break;
         case "semestral":
           amount = 52200; // R$522,00
-          description = "Plano Semestral - Waiter Link (6x R$87,00)";
+          description = `Plano Semestral - Waiter Link (${installments}x R$${(amount / 100 / installments).toFixed(2)})`;
           paymentType = "payment";
+          installmentPlan = {
+            enabled: true,
+            plan: {
+              count: installments,
+              interval: 'month',
+              type: 'fixed_count'
+            }
+          };
           break;
         case "anual":
           amount = 80400; // R$804,00
-          description = "Plano Anual - Waiter Link (12x R$67,00)";
+          description = `Plano Anual - Waiter Link (${installments}x R$${(amount / 100 / installments).toFixed(2)})`;
           paymentType = "payment";
+          installmentPlan = {
+            enabled: true,
+            plan: {
+              count: installments,
+              interval: 'month',
+              type: 'fixed_count'
+            }
+          };
           break;
         default:
           throw new Error("Tipo de plano não reconhecido");
@@ -199,7 +230,8 @@ serve(async (req) => {
             customerId,
             paymentType: "subscription",
             priceId: price.id,
-            amount
+            amount,
+            installments: 1
           };
         } catch (stripeError) {
           console.error("Erro ao criar produto/preço/setupIntent no Stripe:", stripeError);
@@ -212,28 +244,42 @@ serve(async (req) => {
           });
         }
       } else {
-        // Criar intent de pagamento para pagamentos únicos
-        console.log("Criando Payment Intent");
+        // Criar intent de pagamento para pagamentos únicos com parcelas
+        console.log(`Criando Payment Intent com ${installments} parcelas`);
         try {
-          const paymentIntent = await stripe.paymentIntents.create({
+          // Configuração para pagamentos com parcelas
+          const paymentIntentData: any = {
             amount,
             currency: "brl",
             customer: customerId,
             description,
             metadata: {
               user_id: user.id,
-              plan_type: planType
+              plan_type: planType,
+              installments: installments.toString()
             },
             automatic_payment_methods: {
               enabled: true
             }
-          });
+          };
+          
+          // Adicionar configuração de parcelas se aplicável
+          if (installmentPlan && installments > 1) {
+            paymentIntentData.payment_method_options = {
+              card: {
+                installments: installmentPlan
+              }
+            };
+          }
+          
+          const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
           
           paymentResponse = {
             clientSecret: paymentIntent.client_secret,
             customerId,
             paymentType: "payment",
-            amount
+            amount,
+            installments
           };
         } catch (stripeError) {
           console.error("Erro ao criar paymentIntent no Stripe:", stripeError);
@@ -262,6 +308,7 @@ serve(async (req) => {
           stripe_customer_id: customerId,
           subscription_status: "pending",
           plan_type: planType,
+          installments: installments,
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
         console.log("Assinante registrado com sucesso");

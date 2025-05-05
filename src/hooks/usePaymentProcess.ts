@@ -16,6 +16,7 @@ export const usePaymentProcess = (userId: string | undefined) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('mensal');
+  const [selectedInstallments, setSelectedInstallments] = useState(1);
   const [activeTab, setActiveTab] = useState('select-plan');
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,12 @@ export const usePaymentProcess = (userId: string | undefined) => {
 
   const handlePlanChange = (plan: string) => {
     setSelectedPlan(plan);
+    // Reset installments when changing plans
+    setSelectedInstallments(1);
+  };
+
+  const handleInstallmentsChange = (installments: number) => {
+    setSelectedInstallments(installments);
   };
 
   const handleRetry = () => {
@@ -63,11 +70,14 @@ export const usePaymentProcess = (userId: string | undefined) => {
     setError(null);
     
     try {
-      console.log('Iniciando processo de pagamento para plano:', selectedPlan);
+      console.log('Iniciando processo de pagamento para plano:', selectedPlan, 'em', selectedInstallments, 'parcelas');
       await logAccess('payment_initiated', userId, false);
       
       const { data, error } = await supabase.functions.invoke('create-subscription', {
-        body: { planType: selectedPlan }
+        body: { 
+          planType: selectedPlan,
+          installments: selectedInstallments
+        }
       });
       
       console.log('Resposta da função create-subscription:', data);
@@ -144,6 +154,7 @@ export const usePaymentProcess = (userId: string | undefined) => {
     isProcessing,
     isSuccess,
     selectedPlan,
+    selectedInstallments,
     activeTab,
     paymentResponse,
     error,
@@ -152,6 +163,7 @@ export const usePaymentProcess = (userId: string | undefined) => {
     setActiveTab,
     checkStripeKey,
     handlePlanChange,
+    handleInstallmentsChange,
     handleRetry,
     handleCreatePaymentIntent,
     handlePaymentSuccess,
