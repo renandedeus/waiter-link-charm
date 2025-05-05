@@ -10,9 +10,10 @@ import { Waiter } from '@/types';
 
 interface WaiterFormProps {
   onSave: (name: string, email: string, whatsapp: string) => Promise<Waiter | undefined>;
+  googleReviewUrl?: string;
 }
 
-export const WaiterForm = ({ onSave }: WaiterFormProps) => {
+export const WaiterForm = ({ onSave, googleReviewUrl }: WaiterFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -148,12 +149,13 @@ export const WaiterForm = ({ onSave }: WaiterFormProps) => {
       
       {newWaiter && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg">
             <div className="p-4">
               <QRCode 
                 waiterName={newWaiter.name}
                 qrCodeUrl={newWaiter.qrCodeUrl}
                 trackingLink={newWaiter.trackingLink}
+                googleReviewUrl={googleReviewUrl}
               />
             </div>
             <div className="p-4 border-t flex justify-end">

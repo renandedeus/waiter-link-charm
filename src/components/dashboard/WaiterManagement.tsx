@@ -9,12 +9,14 @@ interface WaiterManagementProps {
   waiters: Waiter[];
   onAddWaiter: (name: string, email: string, whatsapp: string) => Promise<Waiter>;
   onDeleteWaiter: (id: string) => Promise<void>;
+  googleReviewUrl?: string;
 }
 
 const WaiterManagement: React.FC<WaiterManagementProps> = ({
   waiters,
   onAddWaiter,
-  onDeleteWaiter
+  onDeleteWaiter,
+  googleReviewUrl
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,10 +54,17 @@ const WaiterManagement: React.FC<WaiterManagementProps> = ({
 
   return (
     <>
-      <WaiterForm onSave={handleAddWaiter} />
+      <WaiterForm 
+        onSave={handleAddWaiter} 
+        googleReviewUrl={googleReviewUrl}
+      />
       <div className="mt-6">
-        <h2 className="text-lg font-medium mb-4">Seus Garçom/Entregador</h2>
-        <WaiterList waiters={waiters} onDelete={handleDeleteWaiter} />
+        <h2 className="text-lg font-medium mb-4">Seus Garçons/Entregadores</h2>
+        <WaiterList 
+          waiters={waiters} 
+          onDelete={handleDeleteWaiter} 
+          googleReviewUrl={googleReviewUrl}
+        />
       </div>
     </>
   );

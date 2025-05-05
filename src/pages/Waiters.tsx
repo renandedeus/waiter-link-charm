@@ -6,27 +6,36 @@ import { Sidebar } from '@/components/Sidebar';
 import WaiterManagement from '@/components/dashboard/WaiterManagement';
 import { Waiter } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
-import { createWaiter, deleteWaiter, getWaiters } from '@/services/waiterService';
+import { createWaiter, deleteWaiter, getWaiters, getRestaurantInfo } from '@/services/waiterService';
 
 const Waiters = () => {
   const [waiters, setWaiters] = useState<Waiter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [googleReviewUrl, setGoogleReviewUrl] = useState<string>('');
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchWaiters = async () => {
+    const fetchData = async () => {
       try {
         if (user?.id) {
           setLoading(true);
+          
+          // Fetch waiters
           const fetchedWaiters = await getWaiters(user.id);
           setWaiters(fetchedWaiters);
+          
+          // Fetch restaurant info to get Google review URL
+          const restaurant = await getRestaurantInfo(user.id);
+          if (restaurant && restaurant.googleReviewUrl) {
+            setGoogleReviewUrl(restaurant.googleReviewUrl);
+          }
         }
       } catch (error) {
-        console.error('Erro ao carregar garçons:', error);
+        console.error('Erro ao carregar dados:', error);
         toast({
-          title: "Erro ao carregar garçons",
-          description: "Ocorreu um problema ao carregar a lista de garçons.",
+          title: "Erro ao carregar dados",
+          description: "Ocorreu um problema ao carregar as informações.",
           variant: "destructive",
         });
       } finally {
@@ -34,7 +43,7 @@ const Waiters = () => {
       }
     };
 
-    fetchWaiters();
+    fetchData();
   }, [user, toast]);
 
   const handleAddWaiter = async (name: string, email: string, whatsapp: string): Promise<Waiter> => {
@@ -101,6 +110,7 @@ const Waiters = () => {
               waiters={waiters}
               onAddWaiter={handleAddWaiter}
               onDeleteWaiter={handleDeleteWaiter}
+              googleReviewUrl={googleReviewUrl}
             />
           )}
         </div>

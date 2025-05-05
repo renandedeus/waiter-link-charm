@@ -22,7 +22,7 @@ export const getWaiters = async (restaurantId: string): Promise<Waiter[]> => {
       email: waiter.email || '',
       whatsapp: waiter.whatsapp || '',
       trackingLink: `${window.location.origin}/r/${waiter.tracking_token}`,
-      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}/r/${waiter.tracking_token}`)}`,
+      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/r/${waiter.tracking_token}`)}`,
       clicks: waiter.clicks || 0,
       createdAt: waiter.created_at,
       conversions: waiter.conversions || 0,
@@ -48,7 +48,7 @@ export const createWaiter = async (waiterData: {
     
     const baseUrl = window.location.origin;
     const trackingLink = `${baseUrl}/r/${trackingToken}`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(trackingLink)}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingLink)}`;
     
     // Insert into database with database model structure
     const { data, error } = await supabase.from('waiters').insert({
