@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { AlertTriangle, Info } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -180,7 +179,7 @@ export const PlanSelector = ({
             </SelectContent>
           </Select>
           <div className="flex items-center gap-2 mt-3">
-            <Checkbox id="creditcard" checked readOnly />
+            <Checkbox id="creditcard" defaultChecked disabled />
             <Label htmlFor="creditcard" className="text-sm text-gray-600">
               Pagamento via cartão de crédito
             </Label>

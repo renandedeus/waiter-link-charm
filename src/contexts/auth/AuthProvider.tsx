@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import AuthContext from './AuthContext';
 import { logAccess } from './utils';
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -123,7 +123,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Log this access
-      await logAccess('login', data.user?.id, isAdmin);
+      if (data.user) {
+        await logAccess('login', data.user.id, isAdmin);
+      }
       
       return { error: null };
     } catch (error) {
@@ -140,7 +142,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       // Log this access before signing out
-      await logAccess('logout', user?.id, isAdmin);
+      if (user) {
+        await logAccess('logout', user.id, isAdmin);
+      }
       
       await supabase.auth.signOut();
       setIsAdmin(false);
@@ -170,3 +174,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
