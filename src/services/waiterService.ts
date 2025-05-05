@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Waiter, LeaderboardEntry, MonthlyChampion, Restaurant } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -107,10 +108,13 @@ export const setRestaurantInfo = async (
   currentRating: number = 0
 ): Promise<any> => {
   try {
-    const { data: user } = await supabase.auth.getUser();
-    const userId = user.user?.id;
+    // Get authenticated user
+    const { data: userData, error: authError } = await supabase.auth.getUser();
     
-    if (!userId) throw new Error("User not authenticated");
+    if (authError) throw authError;
+    if (!userData.user) throw new Error("User not authenticated");
+    
+    const userId = userData.user.id;
     
     // First check if restaurant exists
     const { data: existing, error: checkError } = await supabase
@@ -134,8 +138,7 @@ export const setRestaurantInfo = async (
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .select('*')
-        .maybeSingle();
+        .select('*');
         
       if (error) throw error;
       return data;
@@ -153,8 +156,7 @@ export const setRestaurantInfo = async (
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)
-        .select('*')
-        .maybeSingle();
+        .select('*');
         
       if (error) throw error;
       return data;
@@ -193,20 +195,21 @@ export const updateRestaurantFeedback = async (
 
 export const getRestaurantInfo = async (restaurantId?: string): Promise<Restaurant | null> => {
   try {
-    let id = restaurantId;
-    
-    if (!id) {
-      const { data: user } = await supabase.auth.getUser();
-      id = user.user?.id;
+    // If no restaurantId is provided, get the current authenticated user's ID
+    if (!restaurantId) {
+      const { data: userData, error: authError } = await supabase.auth.getUser();
       
-      if (!id) throw new Error("User not authenticated");
+      if (authError) throw authError;
+      if (!userData.user) throw new Error("User not authenticated");
+      
+      restaurantId = userData.user.id;
     }
     
-    // Use maybeSingle instead of single to prevent error when no results are returned
+    // Use maybeSingle to prevent errors when no results are returned
     const { data, error } = await supabase
       .from('restaurants')
       .select('*')
-      .eq('id', id)
+      .eq('id', restaurantId)
       .maybeSingle();
     
     if (error) throw error;

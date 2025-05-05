@@ -18,6 +18,7 @@ const Waiters = () => {
   const [googleReviewUrl, setGoogleReviewUrl] = useState<string>('');
   const [isSettingReviewUrl, setIsSettingReviewUrl] = useState<boolean>(false);
   const [newReviewUrl, setNewReviewUrl] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -26,6 +27,7 @@ const Waiters = () => {
       try {
         if (user?.id) {
           setLoading(true);
+          setError(null);
           
           // Fetch waiters
           const fetchedWaiters = await getWaiters(user.id);
@@ -35,10 +37,12 @@ const Waiters = () => {
           const restaurant = await getRestaurantInfo(user.id);
           if (restaurant && restaurant.googleReviewUrl) {
             setGoogleReviewUrl(restaurant.googleReviewUrl);
+            setNewReviewUrl(restaurant.googleReviewUrl);
           }
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
+        setError('Falha ao carregar os dados. Por favor, atualize a página.');
         toast({
           title: "Erro ao carregar dados",
           description: "Ocorreu um problema ao carregar as informações.",
@@ -56,6 +60,16 @@ const Waiters = () => {
     try {
       if (!user?.id) {
         throw new Error("Usuário não autenticado");
+      }
+      
+      // Check if we have a Google review URL set
+      if (!googleReviewUrl) {
+        toast({
+          title: "Configuração necessária",
+          description: "Por favor, defina o link de avaliações do Google antes de adicionar garçons.",
+          variant: "destructive",
+        });
+        throw new Error("Google review URL not set");
       }
       
       const newWaiter = await createWaiter({
@@ -93,6 +107,11 @@ const Waiters = () => {
       });
     } catch (error) {
       console.error('Erro ao excluir garçom:', error);
+      toast({
+        title: "Erro ao excluir garçom",
+        description: "Ocorreu um problema ao tentar excluir o garçom.",
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -103,8 +122,18 @@ const Waiters = () => {
         throw new Error("Usuário não autenticado");
       }
 
+      if (!newReviewUrl) {
+        toast({
+          title: "Erro",
+          description: "O link de avaliações não pode estar vazio.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Use async/await and proper error handling
       await setRestaurantInfo(
-        'Seu Restaurante', // Default name if not available
+        user.email || 'Seu Restaurante', // Use email as name if available
         newReviewUrl,
         0, // totalReviews
         0, // initialRating
@@ -142,6 +171,17 @@ const Waiters = () => {
           {loading ? (
             <div className="flex justify-center p-8">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : error ? (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline" 
+                className="mt-2"
+              >
+                Tentar novamente
+              </Button>
             </div>
           ) : (
             <>
