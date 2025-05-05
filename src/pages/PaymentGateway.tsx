@@ -72,12 +72,12 @@ const PaymentGateway = () => {
   }, [canceled, toast]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-4xl">
-        <Card className="shadow-md border-slate-200 bg-white">
-          <CardHeader className="bg-gradient-to-r from-teal-50 to-white border-b border-slate-100">
-            <CardTitle className="text-xl font-bold text-slate-800 text-center">Selecione seu plano</CardTitle>
-            <CardDescription className="text-center text-slate-600">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-center">Selecione seu plano</CardTitle>
+            <CardDescription className="text-center">
               Escolha o plano que melhor atende às suas necessidades
             </CardDescription>
             <DebugInfo message={debugInfo} />
@@ -88,19 +88,11 @@ const PaymentGateway = () => {
               <PaymentSuccess />
             ) : (
               <Tabs value={activeTab} onValueChange={(value) => activeTab !== 'payment' && value !== 'payment'}>
-                <TabsList className="grid w-full grid-cols-2 bg-slate-100">
-                  <TabsTrigger 
-                    value="select-plan" 
-                    disabled={activeTab === 'payment'}
-                    className="data-[state=active]:bg-white data-[state=active]:text-teal-600"
-                  >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="select-plan" disabled={activeTab === 'payment'}>
                     Escolher Plano
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="payment" 
-                    disabled={!paymentResponse || activeTab !== 'payment'}
-                    className="data-[state=active]:bg-white data-[state=active]:text-teal-600"
-                  >
+                  <TabsTrigger value="payment" disabled={!paymentResponse || activeTab !== 'payment'}>
                     Pagamento
                   </TabsTrigger>
                 </TabsList>
@@ -128,14 +120,14 @@ const PaymentGateway = () => {
             )}
           </CardContent>
           
-          <CardFooter className="flex justify-center border-t border-slate-100 bg-slate-50">
+          <CardFooter className="flex justify-center">
             <div className="flex items-center space-x-2">
               <img 
                 src="https://cdn.jsdelivr.net/gh/lipis/flag-icons/flags/1x1/br.svg" 
                 alt="Brazil flag" 
                 className="w-5 h-5" 
               />
-              <p className="text-xs text-slate-500">Pagamento processado em Real Brasileiro (BRL)</p>
+              <p className="text-xs text-gray-500">Pagamento processado em Real Brasileiro (BRL)</p>
             </div>
           </CardFooter>
         </Card>
