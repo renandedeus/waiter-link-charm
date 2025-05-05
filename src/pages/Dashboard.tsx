@@ -9,6 +9,7 @@ import WaiterManagement from '@/components/dashboard/WaiterManagement';
 import WelcomeVideoHandler from '@/components/dashboard/WelcomeVideoHandler';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useWelcomeVideo } from '@/hooks/useWelcomeVideo';
+import { UnifiedDashboard } from '@/components/UnifiedDashboard';
 
 const Dashboard = () => {
   const [activePage, setActivePage] = useState<'dashboard' | 'waiters' | 'google' | 'reviews'>('dashboard');
@@ -47,16 +48,23 @@ const Dashboard = () => {
           ) : (
             <>
               {activePage === 'dashboard' && (
-                <DashboardTabs
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  waiters={waiters}
-                  restaurant={restaurant}
-                  onSaveRestaurant={handleSaveRestaurant}
-                  onRestaurantUpdate={handleRestaurantUpdate}
-                  onReviewTranslated={handleReviewTranslated}
-                  subscriptionStatus={subscriptionStatus}
-                />
+                <>
+                  {/* Add unified dashboard at the top */}
+                  <div className="mb-6">
+                    <UnifiedDashboard waiters={waiters} restaurant={restaurant} />
+                  </div>
+                  
+                  <DashboardTabs
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    waiters={waiters}
+                    restaurant={restaurant}
+                    onSaveRestaurant={handleSaveRestaurant}
+                    onRestaurantUpdate={handleRestaurantUpdate}
+                    onReviewTranslated={handleReviewTranslated}
+                    subscriptionStatus={subscriptionStatus}
+                  />
+                </>
               )}
               
               {activePage === 'waiters' && (

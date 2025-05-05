@@ -5,7 +5,6 @@ import { Stats } from '@/components/Stats';
 import { RestaurantMetrics } from '@/components/RestaurantMetrics';
 import { Leaderboard } from '@/components/Leaderboard';
 import { ReviewsList } from '@/components/ReviewsList';
-import { LeaderboardVisual } from '@/components/LeaderboardVisual';
 import { Restaurant, Review } from '@/types';
 import { Waiter } from '@/types';
 
@@ -41,9 +40,6 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
       
       <TabsContent value="overview" className="pt-4">
         <Stats waiters={waiters} restaurant={restaurant} />
-        <div className="mt-6">
-          <LeaderboardVisual waiters={waiters} restaurant={restaurant} />
-        </div>
         
         {subscriptionStatus && (
           <div className="mt-6">
