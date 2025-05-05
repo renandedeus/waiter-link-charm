@@ -1,7 +1,7 @@
 
 import { Info } from 'lucide-react';
 import { PaymentResponse } from '@/types/payment';
-import StripePaymentForm from '@/components/StripePaymentForm';
+import StripePaymentForm from '@/components/payment/StripePaymentForm';
 
 interface PaymentSummaryProps {
   selectedPlan: string;

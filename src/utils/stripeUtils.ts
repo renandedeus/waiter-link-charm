@@ -1,5 +1,6 @@
 
 import { loadStripe } from '@stripe/stripe-js';
+import type { StripeElementsOptions } from '@stripe/stripe-js';
 
 // Initialize Stripe with the public key directly
 // This key is hardcoded to ensure it's always available
@@ -10,10 +11,8 @@ export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount / 100);
 };
 
-export const getStripeElementsOptions = (clientSecret: string) => {
+export const getStripeElementsOptions = (clientSecret: string): StripeElementsOptions => {
   return {
-    clientSecret,
-    locale: 'pt-BR',
     appearance: {
       theme: 'stripe',
       variables: {
@@ -25,6 +24,7 @@ export const getStripeElementsOptions = (clientSecret: string) => {
         spacingUnit: '4px',
         borderRadius: '4px'
       }
-    }
+    },
+    clientSecret
   };
 };

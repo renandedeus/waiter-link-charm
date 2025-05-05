@@ -1,13 +1,12 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { Elements } from '@stripe/react-stripe-js';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Loader2, XCircle } from 'lucide-react';
+import type { StripeElementsOptions } from '@stripe/stripe-js';
 import { stripePromise, getStripeElementsOptions } from '@/utils/stripeUtils';
 import PaymentForm from './PaymentForm';
 
 interface StripePaymentFormProps {
-  clientSecret: string | null;
+  clientSecret: string;
   paymentType: 'payment' | 'subscription';
   amount: number;
   planType: string;
@@ -25,28 +24,12 @@ const StripePaymentForm = ({
   onPaymentSuccess,
   onCancel
 }: StripePaymentFormProps) => {
-  if (!stripePromise) {
-    return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertDescription className="flex items-center gap-2">
-          <XCircle className="h-5 w-5" />
-          Erro de configuração: Chave pública do Stripe não encontrada.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (!clientSecret) {
-    return (
-      <div className="flex justify-center items-center py-10">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Get the elements options with the client secret
+  const options = getStripeElementsOptions(clientSecret);
 
   return (
-    <Elements stripe={stripePromise} options={getStripeElementsOptions(clientSecret)}>
-      <PaymentForm 
+    <Elements stripe={stripePromise} options={options}>
+      <PaymentForm
         clientSecret={clientSecret}
         paymentType={paymentType}
         amount={amount}
