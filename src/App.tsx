@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -19,6 +20,7 @@ import AdminRestaurantDetail from "./pages/admin/RestaurantDetail";
 import AdminExports from "./pages/admin/Exports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminBackups from "./pages/admin/Backups";
+import InternalFormPage from "./pages/InternalFormPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -101,6 +103,9 @@ const App = () => {
               {/* Public routes */}
               <Route path="/" element={<AuthRedirect element={<Index />} whenAuthenticated="/dashboard" whenAdmin="/admin" />} />
               <Route path="/r/:id" element={<Navigate to="/" />} />
+              
+              {/* Internal form route - directly accessible but not linked in navigation */}
+              <Route path="/internal-form" element={<InternalFormPage />} />
               
               {/* Payment route - only accessible when logged in */}
               <Route path="/payment-gateway" element={<ProtectedRoute element={<PaymentGateway />} />} />
