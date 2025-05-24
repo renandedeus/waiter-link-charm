@@ -93,11 +93,11 @@ const RedirectPage = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Link inválido</h2>
               <p className="text-gray-600">Este link não está mais disponível ou expirou.</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
 
 export default RedirectPage;
