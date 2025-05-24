@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Waiter, LeaderboardEntry, MonthlyChampion, Restaurant } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,21 +12,32 @@ export const getWaiters = async (restaurantId: string): Promise<Waiter[]> => {
       
     if (error) throw error;
     
+    // Get restaurant info to check Google Review URL
+    const restaurant = await getRestaurantInfo(restaurantId);
+    const hasGoogleUrl = restaurant?.googleReviewUrl;
+    
     // Transform database model to app model
-    const transformedData: Waiter[] = data.map(waiter => ({
-      id: waiter.id,
-      trackingId: waiter.tracking_token,
-      restaurantId: waiter.restaurant_id,
-      name: waiter.name,
-      email: waiter.email || '',
-      whatsapp: waiter.whatsapp || '',
-      trackingLink: `${window.location.origin}/r/${waiter.tracking_token}`,
-      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/r/${waiter.tracking_token}`)}`,
-      clicks: waiter.clicks || 0,
-      createdAt: waiter.created_at,
-      conversions: waiter.conversions || 0,
-      isActive: waiter.is_active
-    }));
+    const transformedData: Waiter[] = data.map(waiter => {
+      // If we have a Google URL, use a direct redirect link, otherwise use tracking page
+      const trackingLink = hasGoogleUrl 
+        ? `${window.location.origin}/r/${waiter.tracking_token}`
+        : `${window.location.origin}/r/${waiter.tracking_token}`;
+      
+      return {
+        id: waiter.id,
+        trackingId: waiter.tracking_token,
+        restaurantId: waiter.restaurant_id,
+        name: waiter.name,
+        email: waiter.email || '',
+        whatsapp: waiter.whatsapp || '',
+        trackingLink,
+        qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingLink)}`,
+        clicks: waiter.clicks || 0,
+        createdAt: waiter.created_at,
+        conversions: waiter.conversions || 0,
+        isActive: waiter.is_active
+      };
+    });
     
     return transformedData;
   } catch (error) {
@@ -363,5 +373,53 @@ export const translateReview = async (reviewId: string, content: string): Promis
   } catch (error) {
     console.error('Error translating review:', error);
     throw error;
+  }
+};
+
+// New function to track clicks and redirect
+export const trackClickAndRedirect = async (trackingToken: string): Promise<string | null> => {
+  try {
+    // Get waiter by tracking token
+    const { data: waiter, error: waiterError } = await supabase
+      .from('waiters')
+      .select('*, restaurant_id')
+      .eq('tracking_token', trackingToken)
+      .single();
+    
+    if (waiterError || !waiter) {
+      console.error('Waiter not found:', waiterError);
+      return null;
+    }
+    
+    // Get restaurant info to get Google Review URL
+    const restaurant = await getRestaurantInfo(waiter.restaurant_id);
+    
+    if (!restaurant?.googleReviewUrl) {
+      console.error('No Google Review URL configured for restaurant');
+      return null;
+    }
+    
+    // Track the click
+    await supabase.from('clicks').insert({
+      waiter_id: waiter.id,
+      restaurant_id: waiter.restaurant_id,
+      converted: true, // We consider clicking as a conversion since it goes direct to Google
+      ip_address: null, // Could be populated with actual IP if needed
+      user_agent: null // Could be populated with actual user agent if needed
+    });
+    
+    // Update waiter click count
+    await supabase
+      .from('waiters')
+      .update({ 
+        clicks: (waiter.clicks || 0) + 1,
+        conversions: (waiter.conversions || 0) + 1 
+      })
+      .eq('id', waiter.id);
+    
+    return restaurant.googleReviewUrl;
+  } catch (error) {
+    console.error('Error tracking click:', error);
+    return null;
   }
 };

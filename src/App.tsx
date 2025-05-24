@@ -21,6 +21,7 @@ import AdminExports from "./pages/admin/Exports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminBackups from "./pages/admin/Backups";
 import InternalFormPage from "./pages/InternalFormPage";
+import RedirectPage from "./pages/RedirectPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -102,7 +103,9 @@ const App = () => {
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<AuthRedirect element={<Index />} whenAuthenticated="/dashboard" whenAdmin="/admin" />} />
-              <Route path="/r/:id" element={<Navigate to="/" />} />
+              
+              {/* Redirect route for QR codes - public access */}
+              <Route path="/r/:id" element={<RedirectPage />} />
               
               {/* Internal form route - directly accessible but not linked in navigation */}
               <Route path="/internal-form" element={<InternalFormPage />} />

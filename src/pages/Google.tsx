@@ -18,13 +18,27 @@ const Google = () => {
       />
       <div className="flex-1 overflow-auto">
         <div className="container mx-auto p-4 md:p-6 space-y-6">
-          <h1 className="text-2xl font-bold">Google</h1>
+          <h1 className="text-2xl font-bold">Configuração do Google</h1>
           <p className="text-gray-600 mb-6">
-            Conecte sua conta Google para sincronizar informações do seu negócio e simplificar o processo de avaliações.
+            Configure o link direto para as avaliações da sua empresa no Google. 
+            Todos os QR codes dos garçons redirecionarão automaticamente para este link.
           </p>
           
           <div className="max-w-2xl">
             <GoogleConnectionMenu />
+          </div>
+          
+          <div className="max-w-2xl mt-8">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+              <h3 className="text-lg font-medium text-green-900 mb-2">Como funciona agora:</h3>
+              <ul className="text-sm text-green-800 space-y-2">
+                <li>• Configure uma única vez o link de avaliações do Google da sua empresa</li>
+                <li>• Todos os QR codes dos garçons redirecionarão automaticamente para este link</li>
+                <li>• O sistema registra quantos cliques cada garçom gerou</li>
+                <li>• Não é necessário autenticação complexa ou APIs do Google</li>
+                <li>• Funciona imediatamente após a configuração</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
